@@ -1,6 +1,6 @@
 flask
 speechrecognition
-pyttsx3
+gtts
 python-dotenv
 groq
 gunicorn
