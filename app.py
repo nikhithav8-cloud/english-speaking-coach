@@ -4,6 +4,7 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 from gtts import gTTS
+import uuid 
 import time
 
 # import pyttsx3
@@ -27,13 +28,25 @@ conversation_context = ""
 #     return audio_path
 
 
+# def speak_to_file(text):
+#     filename = f"reply_{int(time.time())}.mp3"
+#     audio_path = f"static/audio/{filename}"
+
+#     tts = gTTS(text=text, lang="en")
+#     tts.save(audio_path)
+#     return audio_path
+
 def speak_to_file(text):
-    filename = f"reply_{int(time.time())}.mp3"
+    os.makedirs("static/audio", exist_ok=True)
+
+    filename = f"{uuid.uuid4()}.mp3"
     audio_path = f"static/audio/{filename}"
 
     tts = gTTS(text=text, lang="en")
     tts.save(audio_path)
+
     return audio_path
+
 
 # ================= AI LOGIC =================
 def english_coach(child_text):
