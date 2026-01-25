@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,9 +6,6 @@
     <link rel="stylesheet" href="/static/index.css">
 </head>
 <body>
-<!-- <div id="logo-container">
-    <img src="/static/logo.jpg" id="logo">
-</div> -->
 
 <h1 class="main-heading">Speak English</h1>
 <p class="sub-heading">Practice. Improve. Speak with Confidence.</p>
@@ -20,7 +18,6 @@
 
 <p id="assistant-text"></p>
 
-
 <script>
 let recognition;
 let isListening = false;
@@ -31,38 +28,49 @@ function initRecognition() {
     recognition.interimResults = false;
     recognition.continuous = false;
 
-    recognition.onresult = function(event) {
+    recognition.onresult = function (event) {
         const text = event.results[0][0].transcript;
 
         document.getElementById("text").innerText = "You said: " + text;
 
         fetch("/process", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: text })
         })
         .then(res => res.json())
         .then(data => {
+
             // Show assistant text
             document.getElementById("assistant-text").innerText =
                 "Assistant: " + data.reply;
 
             // Play assistant audio
             const audio = document.getElementById("audio");
-            audio.src = data.audio + "?t=" + new Date().getTime();
+            audio.src = data.audio + "?t=" + Date.now();
+            audio.load();
 
             audio.onended = () => {
-                // 🔁 Auto start mic after assistant finishes speaking
-                recognition.start();
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.log("Recognition already started");
+                }
             };
 
-            audio.play();
+            audio.play().catch(err => {
+                console.log("Audio play blocked:", err);
+            });
         });
     };
 
-    recognition.onerror = function(event) {
+    recognition.onerror = function (event) {
         console.error("Speech error:", event.error);
-        recognition.start(); // retry listening
+        isListening = false;
+    };
+
+    recognition.onend = function () {
+        isListening = false;
     };
 }
 
