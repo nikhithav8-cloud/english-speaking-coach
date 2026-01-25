@@ -1,5 +1,4 @@
 flask
-speechrecognition
 gtts
 python-dotenv
 groq
