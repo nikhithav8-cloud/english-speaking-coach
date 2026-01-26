@@ -1,114 +1,221 @@
-
+/* 🌌 Background */
 body {
-            background-image: url("/static/image.jpg"); /* path to image */
-            background-size: cover;      /* fill the screen */
-            background-position: center; /* center image */
-            background-repeat: no-repeat;
-            height: 100vh;
-            margin: 0;
-
-            /* Optional: better text visibility */
-            color:white;
-            font-family: Arial, sans-serif;
-            
-           
-        }
-       
-         /* #logo-container {
-    width: 70px;
-    height: 60px;
-    margin: 20px;
-
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-
-    border-radius: 20px;
-
-    box-shadow:
-        0 0 25px rgba(180, 120, 255, 0.5),
-        0 0 10px rgba(255, 255, 255, 0.25);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background-image: url("/static/IMAGE2.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    margin: 0;
+    color: white;
+    font-family: Arial, sans-serif;
 }
 
-#logo {
-    width: 100%;
-    height: 100%;
-    border-radius: 20px; 
-} */
-
-    .main-heading {
+/* 🔹 TOP HEADER (CENTERED LIKE REFERENCE IMAGE) */
+.top-header {
     text-align: center;
-    font-size: 68px;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: 1.5px;
+    padding-top: 40px;
+    padding-bottom: 20px;
 }
 
+/* Heading */
+.main-heading {
+    font-size: 64px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 1.5px;
+    animation: glow 3s infinite ease-in-out;
+}
+
+/* Sub heading */
+.sub-heading {
+    font-size: 20px;
+    color: #e6d9ff;
+    margin-top: 10px;
+}
+
+/* Glow animation */
 @keyframes glow {
     0% { text-shadow: 0 0 15px #c77dff; }
     50% { text-shadow: 0 0 35px #9d4edd; }
     100% { text-shadow: 0 0 15px #c77dff; }
 }
 
-.main-heading {
-    animation: glow 3s infinite ease-in-out;
+/* 🔹 PAGE LAYOUT */
+.page-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    padding: 30px 60px;
+    box-sizing: border-box;
 }
 
-
-.sub-heading {
-    text-align: center;
-    font-size: 20px;
-    color: #e6d9ff;
-    letter-spacing: 1px;
-    opacity: 0.9;
+/* LEFT PANEL */
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
+/* RIGHT PANEL (REDUCED HEIGHT) */
+.right-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 135px;
+}
 
-       
+/* Typing text */
+#typing-text {
+    font-size: 22px;
+    line-height: 1.6;
+    color: #f3e8ff;
+    text-shadow: 0 0 8px rgba(200,150,255,0.6);
+}
 
+/* 🎤 Start Speaking Button (SMALLER & CLEAN) */
+.speak-btn {
+    width: fit-content;
+    padding: 12px 28px;
+    font-size: 16px;
+    border-radius: 25px;
+    border: none;
+    background: white;
+    color: #7a2cbf;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-        button {
-        padding: 20px 50px;
+.speak-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(255,255,255,0.5);
+}
+
+/* Audio */
+#audio {
+    width: 280px;
+}
+
+/* Text outputs */
+#text {
+    font-size: 26px;
+    font-weight: bold;
+}
+
+#assistant-text {
+    font-size: 22px;
+    color: #ffe6ff;
+}
+
+/* 📱 Responsive */
+@media (max-width: 900px) {
+    .page-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .left-panel {
+        align-items: center;
+    }
+
+    .right-panel {
+        margin-top: 30px;
+    }
+}
+
+/* =========================
+   MOBILE RESPONSIVE FIX
+   ========================= */
+
+/* Tablets & Mobile */
+@media (max-width: 768px) {
+
+    /* Reduce header spacing */
+    .top-header {
+        padding-top: 25px;
+        padding-bottom: 15px;
+    }
+
+    .main-heading {
+        font-size: 42px;
+    }
+
+    .sub-heading {
+        font-size: 16px;
+        padding: 0 15px;
+    }
+
+    /* Stack layout vertically */
+    .page-container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 25px;
+        text-align: center;
+    }
+
+    /* Left panel centered */
+    .left-panel {
+        align-items: center;
+        gap: 18px;
+    }
+
+    /* Button smaller */
+    .speak-btn {
+        font-size: 15px;
+        padding: 10px 24px;
+    }
+
+    /* Text sizes reduced */
+    #text {
+        font-size: 20px;
+    }
+
+    #assistant-text {
         font-size: 18px;
-        border-radius: 30px;
-        border: none;
-        background: white;
-        color: #790fb2bd;
-        font-weight: bolder;
-        cursor: pointer;
-        transition: all 0.4s ease;
-        margin-left: 50px;
-        margin-bottom: 40px;
-        }
+        padding: 0 10px;
+    }
 
-        button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(255,255,255,0.6);
-        }
+    /* Audio full width */
+    #audio {
+        width: 100%;
+        max-width: 320px;
+    }
 
-        
-        #audio{
-            margin-left: 50px;
-        }
+    /* Right panel moves below */
+    .right-panel {
+        margin-top: 10px;
+        justify-content: center;
+    }
 
+    #typing-text {
+        font-size: 18px;
+        padding: 0 15px;
+    }
+}
 
-        #text {
-        font-size: 32px;          /* ← THIS makes it bigger */
-        font-weight: bold;
-        margin-left: 50px;
-        margin-top: 20px;
-        color: white;
-        text-shadow: 0 0 10px rgba(255,255,255,0.6);
-         }
+/* =========================
+   SMALL MOBILE (≤ 480px)
+   ========================= */
 
-         #assistant-text {
-        font-size: 28px;
-        margin-left: 50px;
-        margin-top: 15px;
-        font-weight: 600;
-        color: #ffe6ff;
-        text-shadow: 0 0 8px rgba(255, 200, 255, 0.7);
-        }
+@media (max-width: 480px) {
+
+    .main-heading {
+        font-size: 34px;
+    }
+
+    .sub-heading {
+        font-size: 14px;
+    }
+
+    .speak-btn {
+        font-size: 14px;
+        padding: 9px 20px;
+    }
+
+    #typing-text {
+        font-size: 16px;
+    }
+
+    #assistant-text {
+        font-size: 16px;
+    }
+}

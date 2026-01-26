@@ -1,22 +1,43 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>English Practice Friend</title>
     <link rel="stylesheet" href="/static/index.css">
 </head>
+
 <body>
 
-<h1 class="main-heading">Speak English</h1>
-<p class="sub-heading">Practice. Improve. Speak with Confidence.</p>
+<!-- 🔹 TOP CENTER HEADER -->
+<header class="top-header">
+    <h1 class="main-heading">Speak English</h1>
+    <p class="sub-heading">Practice. Improve. Speak with Confidence.</p>
+</header>
 
-<button onclick="start()">Start Speaking 🎤</button>
+<!-- 🔹 MAIN PAGE CONTENT -->
+<div class="page-container">
 
-<p id="text"></p>
+    <!-- LEFT SIDE -->
+    <div class="left-panel">
+        <button onclick="start()" class="speak-btn">Start Speaking 🎤</button>
 
-<audio id="audio" controls></audio>
+        <p id="text"></p>
 
-<p id="assistant-text"></p>
+        <audio id="audio" controls></audio>
+
+        <p id="assistant-text"></p>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="right-panel">
+        <div id="typing-container">
+            <p id="typing-text"></p>
+        </div>
+    </div>
+
+</div>
+
 
 <script>
 let recognition;
@@ -84,6 +105,43 @@ function start() {
         recognition.start();
     }
 }
+
+const lines = [
+    "👋 Welcome to English Practice Friend!",
+    "",
+    "✨ This app helps children",
+    "learn English by speaking.",
+    "",
+    "✨ Speak freely.",
+    "✨ Get corrected gently.",
+    "✨ Improve confidence every day.",
+    "",
+    "✨ Learning English can be fun!",
+];
+
+const typingText = document.getElementById("typing-text");
+let lineIndex = 0;
+let charIndex = 0;
+
+function typeLine() {
+    if (lineIndex >= lines.length) return;
+
+    if (charIndex < lines[lineIndex].length) {
+        typingText.innerHTML += lines[lineIndex].charAt(charIndex);
+        charIndex++;
+        setTimeout(typeLine, 50); // typing speed
+    } else {
+        typingText.innerHTML += "<br>";
+        charIndex = 0;
+        lineIndex++;
+        setTimeout(typeLine, 600); // pause between lines
+    }
+}
+
+// Start typing when page loads
+window.onload = () => {
+    typeLine();
+};
 </script>
 
 </body>
