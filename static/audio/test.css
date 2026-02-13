@@ -1,0 +1,131 @@
+
+* 
+    * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+
+body {
+    background: radial-gradient(circle at top, #1b0033, #000);
+    color: white;
+    min-height: 100vh;
+}
+
+/* ---------- HEADER ---------- */
+.top-header {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.main-heading {
+    font-size: 3rem;
+    color: #e6ccff;
+    text-shadow: 0 0 20px rgba(180, 100, 255, 0.6);
+}
+
+.sub-heading {
+    font-size: 1.2rem;
+    color: #d1b3ff;
+    margin-top: 10px;
+}
+
+/* ---------- LAYOUT ---------- */
+.page-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 20px;
+}
+
+/* ---------- PANELS ---------- */
+.left-panel, .right-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 25px;
+}
+
+/* ---------- BUTTONS ---------- */
+.speak-btn, .repeat-btn {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    margin: 10px auto;
+    padding: 14px;
+    border-radius: 30px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.speak-btn {
+    background: white;
+    color: #6a00ff;
+    font-weight: bold;
+}
+
+.repeat-btn {
+    background: #6a00ff;
+    color: white;
+}
+
+/* ---------- TEXT ---------- */
+#mode-status {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: bold;
+    color: #ffccff;
+}
+
+#model-sentence {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 1.1rem;
+    color: #b3e5ff;
+}
+
+#text, #assistant-text, #repeat-feedback {
+    margin-top: 15px;
+    line-height: 1.6;
+}
+
+/* ---------- AUDIO ---------- */
+audio {
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* ---------- RIGHT PANEL ---------- */
+#typing-container {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #7fdfff;
+    text-shadow: 0 0 10px rgba(0, 200, 255, 0.6);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+    .page-container {
+        grid-template-columns: 1fr;
+    }
+
+    .main-heading {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .main-heading {
+        font-size: 1.8rem;
+    }
+
+    .sub-heading {
+        font-size: 1rem;
+    }
+
+    .left-panel, .right-panel {
+        padding: 15px;
+    }
+}

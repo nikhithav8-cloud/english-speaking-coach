@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - English Learning App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px dashed #f0f0f0;
+        }
+
+        .welcome-text {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .user-name {
+            font-size: 48px;
+            color: #333;
+            font-weight: 900;
+            margin-bottom: 10px;
+            font-family: 'Comic Sans MS', cursive;
+            text-shadow: 3px 3px 0px #667eea22;
+            letter-spacing: 1px;
+            text-transform: capitalize;
+        }
+
+        .user-roll {
+            font-size: 18px;
+            color: #666;
+            background: linear-gradient(135deg, #ffd89b, #19547b);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .motivational-quote {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #fff9e6, #ffe6f0);
+            border-radius: 20px;
+            margin-top: 30px;
+            border-left: 6px solid #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .quote-text {
+            font-size: 18px;
+            color: #555;
+            font-style: italic;
+            line-height: 1.6;
+            font-weight: 600;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .quote-author {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+            font-weight: 700;
+        }
+
+        .buttons-section {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Comic Sans MS', cursive;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 3px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-card {
+                padding: 25px;
+            }
+
+            .user-name {
+                font-size: 38px;
+            }
+
+            .buttons-section {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .dashboard-card {
+                padding: 20px;
+            }
+
+            .user-name {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-card">
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="welcome-text">🎉 Welcome Back! 🎉</div>
+                <div class="user-name">{{ session.student_name }}</div>
+                <div class="user-roll">📚 Roll No: {{ session.roll_no }}</div>
+            </div>
+
+            <!-- Motivational Quote -->
+            <div class="motivational-quote">
+                <div class="quote-text" id="quoteText">
+                    "The beautiful thing about learning is that no one can take it away from you."
+                </div>
+                <div class="quote-author">- B.B. King</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="buttons-section">
+                <a href="/main" class="btn btn-primary">🚀 Start Learning</a>
+                <button onclick="logout()" class="btn btn-secondary">🚪 Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Motivational quotes
+        const quotes = [
+            { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+            { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
+            { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+            { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
+            { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+            { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+            { text: "Every day is a chance to learn something new!", author: "Unknown" },
+            { text: "You're doing amazing! Keep going!", author: "Your Teacher" }
+        ];
+
+        // Random quote on load
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('quoteText').textContent = `"${randomQuote.text}"`;
+        document.querySelector('.quote-author').textContent = `- ${randomQuote.author}`;
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // Load quote on page load
+        window.addEventListener('load', function() {
+            // Page is ready
+        });
+    </script>
+</body>
+</html>

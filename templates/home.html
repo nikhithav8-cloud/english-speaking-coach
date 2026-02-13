@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gayathri Speak Smart - Learn English</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Animated Background Circles */
+        .bg-decoration {
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.12;
+            animation: float 25s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        .circle1 {
+            width: 600px;
+            height: 600px;
+            background: white;
+            top: -250px;
+            left: -250px;
+        }
+
+        .circle2 {
+            width: 400px;
+            height: 400px;
+            background: white;
+            bottom: -180px;
+            right: -180px;
+            animation-delay: 10s;
+        }
+
+        .circle3 {
+            width: 300px;
+            height: 300px;
+            background: white;
+            top: 40%;
+            right: -120px;
+            animation-delay: 20s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -25px) rotate(90deg); }
+            50% { transform: translate(-15px, 15px) rotate(180deg); }
+            75% { transform: translate(25px, -20px) rotate(270deg); }
+        }
+
+        /* Twinkling Stars */
+        .star {
+            position: fixed;
+            font-size: 28px;
+            opacity: 0.35;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.25; 
+                transform: scale(1) rotate(0deg); 
+            }
+            50% { 
+                opacity: 0.85; 
+                transform: scale(1.25) rotate(180deg); 
+            }
+        }
+
+        /* Main Container */
+        .container {
+            background: white;
+            border-radius: 50px;
+            padding: 80px 70px;
+            max-width: 650px;
+            width: 90%;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.35);
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            animation: slideUp 1s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Mascot */
+        .mascot {
+            font-size: 140px;
+            animation: bounce 2.5s infinite ease-in-out;
+            display: inline-block;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            filter: drop-shadow(0 15px 30px rgba(102, 126, 234, 0.3));
+        }
+
+        .mascot:hover {
+            transform: scale(1.15) rotate(12deg);
+        }
+
+        .mascot:active {
+            transform: scale(0.95) rotate(-5deg);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Typography */
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 62px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+
+        .tagline {
+            font-size: 26px;
+            color: #555;
+            margin-bottom: 50px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        /* CTA Button */
+        .cta-button {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #2d3436;
+            border: none;
+            padding: 28px 70px;
+            border-radius: 60px;
+            font-size: 28px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.45);
+            display: inline-block;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .cta-button:hover::before {
+            width: 500px;
+            height: 500px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-8px) scale(1.08);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.65);
+        }
+
+        .cta-button:active {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .cta-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sparkle Effects */
+        .sparkle {
+            position: absolute;
+            font-size: 24px;
+            animation: sparkle 2.5s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { 
+                opacity: 0;
+                transform: scale(0) rotate(0deg);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.3) rotate(180deg);
+            }
+        }
+
+        .sparkle:nth-child(1) { top: 40px; left: 50px; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 50px; right: 60px; animation-delay: 0.8s; }
+        .sparkle:nth-child(3) { bottom: 60px; left: 70px; animation-delay: 1.6s; }
+        .sparkle:nth-child(4) { bottom: 50px; right: 50px; animation-delay: 0.4s; }
+        .sparkle:nth-child(5) { top: 50%; left: 30px; animation-delay: 1.2s; }
+        .sparkle:nth-child(6) { top: 50%; right: 30px; animation-delay: 2s; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 50px 40px;
+                width: 92%;
+                border-radius: 35px;
+            }
+
+            h1 {
+                font-size: 46px;
+            }
+
+            .tagline {
+                font-size: 20px;
+                margin-bottom: 40px;
+            }
+
+            .mascot {
+                font-size: 100px;
+                margin-bottom: 20px;
+            }
+
+            .cta-button {
+                padding: 22px 50px;
+                font-size: 24px;
+            }
+
+            .sparkle {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 38px;
+            }
+
+            .tagline {
+                font-size: 18px;
+            }
+
+            .mascot {
+                font-size: 85px;
+            }
+
+            .cta-button {
+                padding: 20px 45px;
+                font-size: 22px;
+            }
+        }
+
+        @media (max-height: 650px) {
+            .container {
+                padding: 40px 50px;
+            }
+
+            h1 {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+
+            .tagline {
+                font-size: 20px;
+                margin-bottom: 35px;
+            }
+
+            .mascot {
+                font-size: 100px;
+                margin-bottom: 20px;
+            }
+
+            .cta-button {
+                padding: 22px 55px;
+                font-size: 24px;
+            }
+        }
+
+        /* Pulse animation for mascot on load */
+        @keyframes initialPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .mascot.initial-pulse {
+            animation: initialPulse 0.8s ease-out, bounce 2.5s infinite ease-in-out 0.8s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Decorations -->
+    <div class="bg-decoration circle1"></div>
+    <div class="bg-decoration circle2"></div>
+    <div class="bg-decoration circle3"></div>
+
+    <!-- Twinkling Stars -->
+    <div class="star" style="top: 8%; left: 10%;">⭐</div>
+    <div class="star" style="top: 12%; right: 15%;">✨</div>
+    <div class="star" style="bottom: 10%; left: 12%;">🌟</div>
+    <div class="star" style="top: 70%; right: 18%;">💫</div>
+    <div class="star" style="top: 40%; left: 6%;">✨</div>
+    <div class="star" style="bottom: 20%; right: 8%;">⭐</div>
+    <div class="star" style="top: 55%; right: 40%;">🌟</div>
+    <div class="star" style="bottom: 35%; left: 35%;">💫</div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sparkle Effects -->
+        <div class="sparkle">✨</div>
+        <div class="sparkle">💫</div>
+        <div class="sparkle">⭐</div>
+        <div class="sparkle">✨</div>
+        <div class="sparkle">🌟</div>
+        <div class="sparkle">💫</div>
+
+        <!-- Mascot -->
+        <div class="mascot initial-pulse" title="Let's learn English together!" id="mascot">🦉</div>
+
+        <!-- Header -->
+        <h1>Gayathri Speak Smart</h1>
+        <p class="tagline">Master English Speaking<br>with AI-Powered Fun!</p>
+
+        <!-- CTA Button -->
+        <a href="{{ url_for('main') }}" class="cta-button" id="ctaBtn">
+            <span>🚀 Start Learning</span>
+        </a>
+    </div>
+
+    <script>
+        // Prevent scroll on body
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        // Interactive mascot click effect
+        const mascot = document.getElementById('mascot');
+        mascot.addEventListener('click', function() {
+            // Remove initial pulse class if it exists
+            this.classList.remove('initial-pulse');
+            
+            // Reset animation
+            this.style.animation = 'none';
+            
+            // Trigger reflow
+            void this.offsetWidth;
+            
+            // Restart animation
+            this.style.animation = 'bounce 2.5s infinite ease-in-out';
+            
+            // Create sparkle effect around mascot
+            const sparkleEmojis = ['✨', '⭐', '💫', '🌟'];
+            for (let i = 0; i < 8; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.textContent = sparkleEmojis[Math.floor(Math.random() * sparkleEmojis.length)];
+                sparkle.style.position = 'absolute';
+                sparkle.style.fontSize = '28px';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '100';
+                
+                // Random position around mascot
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 80;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                
+                sparkle.style.left = '50%';
+                sparkle.style.top = '50%';
+                sparkle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(0)`;
+                sparkle.style.opacity = '0';
+                sparkle.style.transition = 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                
+                this.appendChild(sparkle);
+                
+                // Animate
+                setTimeout(() => {
+                    sparkle.style.transform = `translate(calc(-50% + ${x * 1.5}px), calc(-50% + ${y * 1.5}px)) scale(1.5) rotate(360deg)`;
+                    sparkle.style.opacity = '1';
+                }, 50);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    sparkle.style.opacity = '0';
+                    sparkle.style.transform = `translate(calc(-50% + ${x * 2}px), calc(-50% + ${y * 2}px)) scale(0) rotate(720deg)`;
+                }, 100);
+                
+                setTimeout(() => sparkle.remove(), 900);
+            }
+        });
+
+        // Add subtle pulse effect to CTA button
+        const ctaBtn = document.getElementById('ctaBtn');
+        setInterval(() => {
+            ctaBtn.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                ctaBtn.style.transform = 'scale(1)';
+            }, 200);
+        }, 4000);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                ctaBtn.click();
+            }
+        });
+
+        // Remove initial-pulse class after animation completes
+        setTimeout(() => {
+            mascot.classList.remove('initial-pulse');
+        }, 800);
+    </script>
+</body>
+</html>
