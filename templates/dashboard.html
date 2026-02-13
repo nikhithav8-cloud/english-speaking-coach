@@ -67,7 +67,6 @@
             font-family: 'Comic Sans MS', cursive;
             text-shadow: 3px 3px 0px #667eea22;
             letter-spacing: 1px;
-            text-transform: capitalize;
         }
 
         .user-roll {
@@ -194,7 +193,7 @@
             <!-- Header Section -->
             <div class="header-section">
                 <div class="welcome-text">🎉 Welcome Back! 🎉</div>
-                <div class="user-name">{{ session.student_name }}</div>
+                <div class="user-name" id="studentName">{{ session.name }}</div>
                 <div class="user-roll">📚 Roll No: {{ session.roll_no }}</div>
             </div>
 
@@ -215,6 +214,28 @@
     </div>
 
     <script>
+        {% raw %}
+        // Capitalize first letter of each word in name
+        function capitalizeName(name) {
+            if (!name) return '';
+            return name
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }
+
+        // Capitalize the student name on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const nameElement = document.getElementById('studentName');
+            if (nameElement) {
+                const originalName = nameElement.textContent.trim();
+                // Only capitalize if it's not a template variable
+                if (originalName && !originalName.includes('{{')) {
+                    nameElement.textContent = capitalizeName(originalName);
+                }
+            }
+        });
+
         // Motivational quotes
         const quotes = [
             { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
@@ -224,7 +245,7 @@
             { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
             { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
             { text: "Every day is a chance to learn something new!", author: "Unknown" },
-            { text: "You're doing amazing! Keep going!", author: "Your Teacher" }
+            { text: "You are doing amazing! Keep going!", author: "Your Teacher" }
         ];
 
         // Random quote on load
@@ -237,11 +258,7 @@
                 window.location.href = '/logout';
             }
         }
-
-        // Load quote on page load
-        window.addEventListener('load', function() {
-            // Page is ready
-        });
+        {% endraw %}
     </script>
 </body>
 </html>

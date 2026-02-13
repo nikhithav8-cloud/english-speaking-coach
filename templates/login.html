@@ -123,6 +123,47 @@
             font-size: 16px;
         }
 
+        /* Role Selection */
+        .role-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 20px;
+            border: 3px solid #e0e0e0;
+            background: white;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .role-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .role-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .role-icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .role-name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
         /* Form */
         .form-group {
             margin-bottom: 25px;
@@ -137,6 +178,7 @@
         }
 
         input[type="text"],
+        input[type="email"],
         input[type="password"] {
             width: 100%;
             padding: 15px;
@@ -148,6 +190,7 @@
         }
 
         input[type="text"]:focus,
+        input[type="email"]:focus,
         input[type="password"]:focus {
             outline: none;
             border-color: #667eea;
@@ -300,12 +343,30 @@
         <!-- Alert Messages -->
         <div id="alertBox" class="alert"></div>
 
+        <!-- Role Selection -->
+        <div class="role-selector" id="roleSelector">
+            <div class="role-btn active" onclick="selectRole('student')">
+                <span class="role-icon">👨‍🎓</span>
+                <span class="role-name">Student</span>
+            </div>
+            <div class="role-btn" onclick="selectRole('teacher')">
+                <span class="role-icon">👩‍🏫</span>
+                <span class="role-name">Teacher</span>
+            </div>
+        </div>
+
         <!-- Login Form -->
         <form id="loginForm">
-            <div class="form-group">
+            <div class="form-group" id="rollNoGroup">
                 <label for="loginRollNo">Roll Number</label>
                 <input type="text" id="loginRollNo" placeholder="Enter your roll number (e.g., 001)" required>
                 <div class="input-hint">Your 3-digit roll number</div>
+            </div>
+
+            <div class="form-group hidden" id="emailGroup">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email">
+                <div class="input-hint">Your registered email address</div>
             </div>
 
             <div class="form-group">
@@ -314,7 +375,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">🚀 Login</button>
-            <button type="button" class="btn btn-secondary" onclick="showSignup()">✨ New Student? Sign Up</button>
+            <button type="button" class="btn btn-secondary" onclick="showSignup()">✨ New User? Sign Up</button>
         </form>
 
         <!-- Signup Form (Hidden by default) -->
@@ -324,10 +385,16 @@
                 <input type="text" id="signupName" placeholder="Enter your full name" required>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="signupRollNoGroup">
                 <label for="signupRollNo">Roll Number</label>
                 <input type="text" id="signupRollNo" placeholder="Enter roll number (e.g., 001)" required>
                 <div class="input-hint">Use 3 digits: 001, 002, 003, etc.</div>
+            </div>
+
+            <div class="form-group hidden" id="signupEmailGroup">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" placeholder="Enter your email">
+                <div class="input-hint">Your professional email address</div>
             </div>
 
             <div class="form-group">
@@ -346,6 +413,8 @@
     </div>
 
     <script>
+        let selectedRole = 'student';
+
         // Show alert message
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');
@@ -358,17 +427,65 @@
             }, 4000);
         }
 
+        // Capitalize first letter of each word in name
+        function capitalizeName(name) {
+            if (!name) return 'User';
+            return name
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }
+
+        // Select role (student or teacher)
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // Update button states
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.role-btn').classList.add('active');
+            
+            // Show/hide appropriate fields
+            if (role === 'student') {
+                document.getElementById('rollNoGroup').classList.remove('hidden');
+                document.getElementById('emailGroup').classList.add('hidden');
+                document.getElementById('loginEmail').required = false;
+                document.getElementById('loginRollNo').required = true;
+            } else {
+                document.getElementById('rollNoGroup').classList.add('hidden');
+                document.getElementById('emailGroup').classList.remove('hidden');
+                document.getElementById('loginEmail').required = true;
+                document.getElementById('loginRollNo').required = false;
+            }
+        }
+
         // Toggle between login and signup
         function showSignup() {
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('roleSelector').style.display = 'flex';
             document.querySelector('h1').textContent = 'Create Account';
             document.querySelector('.subtitle').textContent = 'Join us and start learning!';
+            
+            // Update signup form based on role
+            if (selectedRole === 'student') {
+                document.getElementById('signupRollNoGroup').classList.remove('hidden');
+                document.getElementById('signupEmailGroup').classList.add('hidden');
+                document.getElementById('signupEmail').required = false;
+                document.getElementById('signupRollNo').required = true;
+            } else {
+                document.getElementById('signupRollNoGroup').classList.add('hidden');
+                document.getElementById('signupEmailGroup').classList.remove('hidden');
+                document.getElementById('signupEmail').required = true;
+                document.getElementById('signupRollNo').required = false;
+            }
         }
 
         function showLogin() {
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('roleSelector').style.display = 'flex';
             document.querySelector('h1').textContent = 'Welcome Back!';
             document.querySelector('.subtitle').textContent = "Let's continue your English journey";
         }
@@ -378,12 +495,20 @@
             return rollNo.padStart(3, '0');
         }
 
-        // Login Form Submit - CHANGED TO REDIRECT TO DASHBOARD
+        // Login Form Submit
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const rollNo = formatRollNo(document.getElementById('loginRollNo').value);
             const password = document.getElementById('loginPassword').value;
+            let identifier, identifierType;
+            
+            if (selectedRole === 'student') {
+                identifier = formatRollNo(document.getElementById('loginRollNo').value);
+                identifierType = 'rollNo';
+            } else {
+                identifier = document.getElementById('loginEmail').value;
+                identifierType = 'email';
+            }
 
             try {
                 const response = await fetch('/login', {
@@ -391,18 +516,29 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ rollNo, password })
+                    body: JSON.stringify({ 
+                        [identifierType]: identifier,
+                        password: password,
+                        role: selectedRole
+                    })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showAlert('Login successful! Redirecting to dashboard...', 'success');
+                    // Capitalize the student/teacher name
+                    const userName = capitalizeName(data.name);
+                    
+                    showAlert(`Welcome back, ${userName}! Redirecting...`, 'success');
                     setTimeout(() => {
-                        window.location.href = '/dashboard';  // CHANGED FROM /main TO /dashboard
+                        if (selectedRole === 'student') {
+                            window.location.href = '/dashboard';
+                        } else {
+                            window.location.href = '/teacher-dashboard';
+                        }
                     }, 1000);
                 } else {
-                    showAlert(data.message || 'Invalid roll number or password!', 'error');
+                    showAlert(data.message || 'Invalid credentials!', 'error');
                 }
             } catch (error) {
                 showAlert('Error connecting to server. Please try again.', 'error');
@@ -414,9 +550,18 @@
             e.preventDefault();
             
             const name = document.getElementById('signupName').value;
-            const rollNo = formatRollNo(document.getElementById('signupRollNo').value);
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            let identifier, identifierType;
+            
+            if (selectedRole === 'student') {
+                identifier = formatRollNo(document.getElementById('signupRollNo').value);
+                identifierType = 'rollNo';
+            } else {
+                identifier = document.getElementById('signupEmail').value;
+                identifierType = 'email';
+            }
 
             // Validation
             if (password !== confirmPassword) {
@@ -435,7 +580,12 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name, rollNo, password })
+                    body: JSON.stringify({ 
+                        name: name,
+                        [identifierType]: identifier,
+                        password: password,
+                        role: selectedRole
+                    })
                 });
 
                 const data = await response.json();
@@ -444,7 +594,11 @@
                     showAlert('Account created successfully! Redirecting to login...', 'success');
                     setTimeout(() => {
                         showLogin();
-                        document.getElementById('loginRollNo').value = rollNo;
+                        if (selectedRole === 'student') {
+                            document.getElementById('loginRollNo').value = identifier;
+                        } else {
+                            document.getElementById('loginEmail').value = identifier;
+                        }
                     }, 1500);
                 } else {
                     showAlert(data.message || 'Signup failed. Please try again.', 'error');

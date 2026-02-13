@@ -49,10 +49,6 @@
             box-shadow: 0 8px 25px rgba(214, 48, 49, 0.6);
         }
 
-        .exit-btn:active {
-            transform: translateY(-1px);
-        }
-
         /* Floating Background Shapes */
         .bg-decoration {
             position: fixed;
@@ -116,6 +112,160 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
             z-index: 10;
+        }
+
+        /* ========== XP SYSTEM STYLES ========== */
+        .xp-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .xp-header::before {
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+            animation: twinkle 3s infinite;
+        }
+
+        .xp-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .student-name {
+            font-size: 24px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .level-display {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .level-badge {
+            background: white;
+            color: #667eea;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .xp-amount {
+            font-size: 20px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .xp-progress-container {
+            width: 100%;
+        }
+
+        .xp-progress-bar {
+            width: 100%;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 17px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .xp-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+            background-size: 200% 100%;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #2d3436;
+            font-size: 14px;
+            position: relative;
+            animation: shimmerXP 3s linear infinite;
+        }
+
+        @keyframes shimmerXP {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        .xp-next-level {
+            text-align: right;
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+        /* XP Gain Popup */
+        .xp-gain-popup {
+            position: fixed;
+            top: 20%;
+            right: 20px;
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: 900;
+            box-shadow: 0 10px 30px rgba(0, 184, 148, 0.5);
+            z-index: 9999;
+            animation: slideInRight 0.5s ease-out, fadeOut 0.5s ease-out 2.5s;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Level Up Notification */
+        .level-up-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            padding: 40px 60px;
+            border-radius: 30px;
+            font-size: 48px;
+            font-weight: 900;
+            color: #2d3436;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 10000;
+            animation: levelUp 2s ease-out;
+            text-align: center;
+        }
+
+        @keyframes levelUp {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
         }
 
         /* Mascot Character */
@@ -213,7 +363,7 @@
             transform: scale(1.05);
         }
 
-        /* Conversation Mode Styles */
+        /* Chat and other existing styles remain the same */
         .chat-area {
             background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
             border-radius: 20px;
@@ -289,7 +439,6 @@
             font-size: 24px;
         }
 
-        /* Roleplay Mode Styles */
         .roleplay-selector {
             background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
             padding: 20px;
@@ -329,7 +478,6 @@
             box-shadow: 0 0 0 3px rgba(253, 203, 110, 0.3);
         }
 
-        /* Repeat Mode Styles */
         .settings-panel {
             background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
             padding: 25px;
@@ -373,7 +521,6 @@
             box-shadow: 0 0 0 3px rgba(253, 203, 110, 0.3);
         }
 
-        /* Category Icons */
         .category-icon {
             display: inline-block;
             margin-right: 8px;
@@ -716,7 +863,6 @@
             display: none;
         }
 
-        /* Sound Wave Animation */
         .sound-wave {
             display: none;
             justify-content: center;
@@ -749,7 +895,6 @@
             50% { height: 60px; }
         }
 
-        /* Confetti */
         .confetti {
             position: fixed;
             width: 10px;
@@ -766,7 +911,6 @@
             }
         }
 
-        /* Completion Modal */
         .completion-modal {
             position: fixed;
             top: 0;
@@ -859,7 +1003,6 @@
             font-weight: bold;
         }
 
-        /* Word Meanings Mode Styles */
         .word-input-container {
             background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
             padding: 30px;
@@ -976,7 +1119,6 @@
             box-shadow: 0 5px 15px rgba(253, 203, 110, 0.3);
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 padding: 25px;
@@ -1015,6 +1157,25 @@
                 padding: 10px 18px;
                 font-size: 14px;
             }
+
+            .xp-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .student-name {
+                font-size: 20px;
+            }
+            
+            .level-display {
+                flex-wrap: wrap;
+            }
+
+            .level-up-notification {
+                padding: 30px 40px;
+                font-size: 36px;
+            }
         }
     </style>
 </head>
@@ -1037,6 +1198,25 @@
     <div class="star-bg" style="top: 60%; right: 25%;">💫</div>
 
     <div class="container">
+        <!-- XP Header - Student Progress Display -->
+        <div class="xp-header">
+            <div class="xp-info">
+                <div class="student-name" id="studentName">Loading...</div>
+                <div class="level-display">
+                    <span class="level-badge" id="levelBadge">Level 1</span>
+                    <span class="xp-amount" id="xpAmount">0 XP</span>
+                </div>
+            </div>
+            <div class="xp-progress-container">
+                <div class="xp-progress-bar">
+                    <div class="xp-progress-fill" id="xpProgressFill" style="width: 0%;">
+                        <span id="xpProgressText">0/100</span>
+                    </div>
+                </div>
+                <div class="xp-next-level" id="xpNextLevel">100 XP to Level 2</div>
+            </div>
+        </div>
+
         <!-- Mascot -->
         <div class="mascot" title="Hi! I'm your English coach!">🦉</div>
         
@@ -1070,7 +1250,6 @@
                 </div>
             </div>
             
-            <!-- Sound Wave -->
             <div class="sound-wave" id="soundWave1">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -1105,7 +1284,6 @@
                 </div>
             </div>
             
-            <!-- Sound Wave -->
             <div class="sound-wave" id="soundWave3">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -1123,7 +1301,6 @@
 
         <!-- Repeat Mode -->
         <div id="repeatMode" class="hidden">
-            <!-- Settings Panel -->
             <div class="settings-panel">
                 <div class="setting-group">
                     <label><span class="category-icon">📚</span>Choose Category:</label>
@@ -1149,12 +1326,10 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill">0/5 🚀</div>
             </div>
 
-            <!-- Stats -->
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="currentScore">0</div>
@@ -1170,7 +1345,6 @@
                 </div>
             </div>
 
-            <!-- Badges -->
             <div class="badges">
                 <div class="badge" id="badge1">
                     <div class="badge-icon">🥉</div>
@@ -1186,10 +1360,8 @@
                 </div>
             </div>
 
-            <!-- Sentence Display -->
             <div id="repeatSentence">Click "Start Stage" to begin! 🚀</div>
 
-            <!-- Sound Wave -->
             <div class="sound-wave" id="soundWave2">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -1198,7 +1370,6 @@
                 <div class="wave-bar"></div>
             </div>
 
-            <!-- Controls -->
             <div class="controls">
                 <button class="mic-btn" onclick="startStage()" id="startBtn">
                     🚀 Start Stage
@@ -1211,13 +1382,11 @@
                 </button>
             </div>
 
-            <!-- Feedback -->
             <div id="repeatFeedback"></div>
         </div>
 
         <!-- Spell Bee Mode -->
         <div id="spellbeeMode" class="hidden">
-            <!-- Settings Panel -->
             <div class="settings-panel">
                 <div class="setting-group">
                     <label><span class="category-icon">🎯</span>Choose Difficulty:</label>
@@ -1229,12 +1398,10 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="progress-bar">
                 <div class="progress-fill" id="spellProgressFill">0/5 🐝</div>
             </div>
 
-            <!-- Stats -->
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="spellCurrentScore">0</div>
@@ -1250,7 +1417,6 @@
                 </div>
             </div>
 
-            <!-- Badges -->
             <div class="badges">
                 <div class="badge" id="spellBadge1">
                     <div class="badge-icon">🥉</div>
@@ -1266,22 +1432,18 @@
                 </div>
             </div>
 
-            <!-- Word Display -->
             <div id="spellWord">Click "Start Spelling" to begin! 🐝</div>
 
-            <!-- Usage Sentence -->
             <div class="usage-sentence" id="usageSentence" style="display:none;">
                 Usage: <span id="usageText"></span>
             </div>
 
-            <!-- Spelling Input -->
             <div class="spell-input-container" id="spellInputContainer" style="display:none;">
                 <div class="spell-input-box">
                     <input type="text" class="spell-input" id="spellingInput" placeholder="TYPE HERE" maxlength="20">
                 </div>
             </div>
 
-            <!-- Sound Wave -->
             <div class="sound-wave" id="soundWave4">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -1290,7 +1452,6 @@
                 <div class="wave-bar"></div>
             </div>
 
-            <!-- Controls -->
             <div class="controls">
                 <button class="mic-btn" onclick="startSpelling()" id="spellStartBtn">
                     🚀 Start Spelling
@@ -1306,7 +1467,6 @@
                 </button>
             </div>
 
-            <!-- Feedback -->
             <div id="spellFeedback"></div>
         </div>
 
@@ -1325,7 +1485,6 @@
                 </div>
             </div>
 
-            <!-- Word Meaning Display -->
             <div class="word-meaning-display" id="wordMeaningDisplay">
                 <div style="text-align: center; color: #999; font-size: 20px; padding: 60px 20px;">
                     <span style="font-size: 80px; display: block; margin-bottom: 20px;">📚</span>
@@ -1333,7 +1492,6 @@
                 </div>
             </div>
 
-            <!-- Sound Wave -->
             <div class="sound-wave" id="soundWave5">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -1377,18 +1535,164 @@
         let currentWordAudio = '';
         let currentUsageAudio = '';
 
+        // ========== XP SYSTEM VARIABLES ==========
+        let studentXP = 0;
+        let studentLevel = 1;
+        let studentName = 'Student';
+        let studentRollNo = '';
+
+        // ========== LOAD STUDENT INFO ON PAGE LOAD ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            loadStudentInfo();
+        });
+
+        // ========== CAPITALIZE FIRST LETTER FUNCTION ==========
+        function capitalizeFirstLetter(str) {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // ========== XP SYSTEM FUNCTIONS ==========
+        async function loadStudentInfo() {
+            try {
+                const response = await fetch('/get_student_info');
+                const data = await response.json();
+                
+                if (data.success) {
+                    studentXP = data.student.xp || 0;
+                    studentLevel = calculateLevel(studentXP);
+                    studentName = data.student.name || 'Student';
+                    studentRollNo = data.student.rollNo || '';
+                    
+                    updateXPDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading student info:', error);
+                studentXP = 0;
+                studentLevel = 1;
+                updateXPDisplay();
+            }
+        }
+
+        function calculateLevel(xp) {
+            return Math.floor(xp / 100) + 1;
+        }
+
+        function xpToNextLevel(currentXP) {
+            const currentLevel = calculateLevel(currentXP);
+            const nextLevelXP = currentLevel * 100;
+            return nextLevelXP - currentXP;
+        }
+
+        function updateXPDisplay() {
+            const nameElement = document.getElementById('studentName');
+            if (nameElement) {
+                // Apply capitalization to first letter only
+                nameElement.textContent = capitalizeFirstLetter(studentName);
+            }
+            
+            const levelBadge = document.getElementById('levelBadge');
+            if (levelBadge) {
+                levelBadge.textContent = `Level ${studentLevel}`;
+            }
+            
+            const xpAmount = document.getElementById('xpAmount');
+            if (xpAmount) {
+                xpAmount.textContent = `${studentXP} XP`;
+            }
+            
+            const xpForCurrentLevel = (studentLevel - 1) * 100;
+            const xpForNext = studentLevel * 100;
+            const xpInCurrentLevel = studentXP - xpForCurrentLevel;
+            const xpNeeded = xpForNext - xpForCurrentLevel;
+            
+            const percentage = (xpInCurrentLevel / xpNeeded) * 100;
+            const progressFill = document.getElementById('xpProgressFill');
+            if (progressFill) {
+                progressFill.style.width = percentage + '%';
+            }
+            
+            const progressText = document.getElementById('xpProgressText');
+            if (progressText) {
+                progressText.textContent = `${xpInCurrentLevel}/${xpNeeded}`;
+            }
+            
+            const nextLevel = document.getElementById('xpNextLevel');
+            if (nextLevel) {
+                const remaining = xpForNext - studentXP;
+                nextLevel.textContent = `${remaining} XP to Level ${studentLevel + 1}`;
+            }
+        }
+
+        async function awardXP(xpAmount, mode, score, stars) {
+            showXPGainPopup(xpAmount);
+            
+            try {
+                const response = await fetch('/update_xp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        xpEarned: xpAmount,
+                        mode: mode,
+                        score: score,
+                        starsEarned: stars
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const oldLevel = studentLevel;
+                    studentXP = data.newXP;
+                    studentLevel = data.newLevel;
+                    
+                    updateXPDisplay();
+                    
+                    if (data.leveledUp && data.newLevel > oldLevel) {
+                        setTimeout(() => {
+                            showLevelUpAnimation(data.newLevel);
+                        }, 500);
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating XP:', error);
+            }
+        }
+
+        function showXPGainPopup(xpAmount) {
+            const popup = document.createElement('div');
+            popup.className = 'xp-gain-popup';
+            popup.textContent = `+${xpAmount} XP 🎉`;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+
+        function showLevelUpAnimation(newLevel) {
+            createConfetti();
+            
+            const notification = document.createElement('div');
+            notification.className = 'level-up-notification';
+            notification.innerHTML = `
+                <div>🎉 LEVEL UP! 🎉</div>
+                <div style="font-size: 72px; margin: 20px 0;">⭐</div>
+                <div style="font-size: 36px;">Level ${newLevel}</div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
         // Exit to home function
         function exitToHome() {
-            // Stop all microphones and audio first
             stopAllMicAndAudio();
             
-            // You can change this URL to your actual home page
-            // For example: window.location.href = '/';
-            // Or: window.location.href = 'index.html';
-            // Or: window.location.href = 'home.html';
-            
             if (confirm('Are you sure you want to exit to the home page?')) {
-                window.location.href = '/';  // Change this to your home page URL
+                window.location.href = '/';
             }
         }
 
@@ -1404,21 +1708,16 @@
 
         // Function to stop all microphones and audio
         function stopAllMicAndAudio() {
-            // Stop speech recognition if active
             try {
                 recognition.stop();
-            } catch(e) {
-                // Recognition wasn't active, that's fine
-            }
+            } catch(e) {}
             
-            // Stop any playing audio
             if (currentAudioPlaying) {
                 currentAudioPlaying.pause();
                 currentAudioPlaying.currentTime = 0;
                 currentAudioPlaying = null;
             }
             
-            // Reset all mic buttons to default state
             const micBtns = ['micBtn', 'roleplayMicBtn', 'repeatMicBtn'];
             micBtns.forEach(btnId => {
                 const btn = document.getElementById(btnId);
@@ -1428,14 +1727,12 @@
                 }
             });
             
-            // Reset button texts
             document.getElementById('micBtn').textContent = '🎤 Click to Speak';
             document.getElementById('roleplayMicBtn').textContent = '🎤 Click to Speak';
             if (document.getElementById('repeatMicBtn').style.display !== 'none') {
                 document.getElementById('repeatMicBtn').textContent = '🎤 Repeat';
             }
             
-            // Stop all sound waves
             document.querySelectorAll('.sound-wave').forEach(wave => {
                 wave.classList.remove('active');
             });
@@ -1459,28 +1756,21 @@
 
         // Switch between modes
         function switchMode(mode) {
-            // CRITICAL: Stop all microphones and audio first
             stopAllMicAndAudio();
-            
-            // Update current mode
             currentMode = mode;
             
-            // Update ALL buttons - remove active class from all
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            // Add active class to the clicked button
             event.target.classList.add('active');
 
-            // Hide ALL mode sections first
             document.getElementById('conversationMode').classList.add('hidden');
             document.getElementById('roleplayMode').classList.add('hidden');
             document.getElementById('repeatMode').classList.add('hidden');
             document.getElementById('spellbeeMode').classList.add('hidden');
             document.getElementById('meaningsMode').classList.add('hidden');
 
-            // Show ONLY the selected mode section
             if (mode === 'conversation') {
                 document.getElementById('conversationMode').classList.remove('hidden');
             } else if (mode === 'roleplay') {
@@ -1553,21 +1843,20 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Remove "Thinking..." message
                 const chatArea = document.getElementById(chatAreaId);
                 chatArea.removeChild(chatArea.lastChild);
                 
-                // Add AI response
                 addMessage(data.reply, 'ai', chatAreaId);
                 
-                // Play audio and track it
                 const audio = new Audio(data.audio);
                 currentAudioPlaying = audio;
                 audio.play();
                 
-                // Auto-reactivate microphone after audio finishes
                 audio.onended = function() {
                     currentAudioPlaying = null;
+                    // Award XP for conversation
+                    awardXP(5, 'conversation', 100, 1);
+                    
                     if (autoReactivate && currentMode === 'conversation') {
                         setTimeout(() => {
                             startRecording();
@@ -1632,21 +1921,20 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Remove "Thinking..." message
                 const chatArea = document.getElementById(chatAreaId);
                 chatArea.removeChild(chatArea.lastChild);
                 
-                // Add AI response
                 addMessage(data.reply, 'ai', chatAreaId);
                 
-                // Play audio and track it
                 const audio = new Audio(data.audio);
                 currentAudioPlaying = audio;
                 audio.play();
                 
-                // Auto-reactivate microphone after audio finishes
                 audio.onended = function() {
                     currentAudioPlaying = null;
+                    // Award XP for roleplay
+                    awardXP(8, 'roleplay', 100, 1);
+                    
                     if (autoReactivate && currentMode === 'roleplay') {
                         setTimeout(() => {
                             startRoleplayRecording();
@@ -1666,6 +1954,7 @@
         function resetStage() {
             currentStage = 0;
             stageScores = [];
+            totalStars = 0;
             updateProgress();
             document.getElementById('repeatSentence').textContent = 'Click "Start Stage" to begin! 🚀';
             document.getElementById('startBtn').style.display = 'block';
@@ -1677,6 +1966,7 @@
         function startStage() {
             currentStage = 0;
             stageScores = [];
+            totalStars = 0;
             getNewSentence();
             document.getElementById('startBtn').style.display = 'none';
         }
@@ -1710,11 +2000,9 @@
                 currentAudioSlow = data.audio_slow;
                 document.getElementById('repeatSentence').textContent = data.sentence;
                 
-                // Show controls
                 document.getElementById('slowBtn').style.display = 'block';
                 document.getElementById('repeatMicBtn').style.display = 'block';
                 
-                // Play audio and track it
                 const audio = new Audio(data.audio);
                 currentAudioPlaying = audio;
                 audio.play();
@@ -1779,12 +2067,10 @@
                 stageScores.push(data.score);
                 totalStars += data.stars;
                 
-                // Trigger confetti if perfect score
                 if (data.stars === 3) {
                     createConfetti();
                 }
                 
-                // Display word-by-word comparison
                 let comparisonHTML = '<div style="margin: 20px 0; font-size: 20px; line-height: 2;">';
                 data.word_comparison.forEach((word, index) => {
                     setTimeout(() => {
@@ -1800,7 +2086,6 @@
                 });
                 comparisonHTML += '</div>';
                 
-                // Display stars
                 let starsHTML = '<div class="stars">';
                 for (let i = 0; i < 3; i++) {
                     setTimeout(() => {
@@ -1822,13 +2107,19 @@
                     </div>
                 `;
                 
-                // Update stats
                 document.getElementById('currentScore').textContent = data.score;
                 document.getElementById('totalScore').textContent = totalStars;
                 updateAccuracy();
                 updateBadges();
                 
-                // Auto-advance after 3 seconds
+                // Award XP only after all 5 stages
+                if (currentStage >= totalStages) {
+                    const averageScore = stageScores.reduce((a, b) => a + b, 0) / stageScores.length;
+                    const totalXPEarned = Math.floor(averageScore / 2) * totalStages;
+                    const perfectBonus = totalStars === 15 ? 25 : 0;
+                    awardXP(totalXPEarned + perfectBonus, 'repeat', averageScore, totalStars);
+                }
+                
                 setTimeout(() => {
                     getNewSentence();
                 }, 3000);
@@ -1870,10 +2161,8 @@
             const modalScore = document.getElementById('modalScore');
             const modalMessage = document.getElementById('modalMessage');
             
-            // Clear previous stars
             modalStars.innerHTML = '';
             
-            // Calculate final performance
             const finalStarCount = Math.floor(totalStars / 5);
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
@@ -1908,7 +2197,6 @@
                 document.getElementById('totalScore').textContent = '0';
                 document.getElementById('accuracy').textContent = '0%';
                 
-                // Reset badges
                 document.querySelectorAll('.badge').forEach(badge => {
                     badge.classList.remove('unlocked');
                 });
@@ -1918,7 +2206,6 @@
                 document.getElementById('spellTotalScore').textContent = '0';
                 document.getElementById('spellAccuracy').textContent = '0%';
                 
-                // Reset spell badges
                 document.querySelectorAll('[id^="spellBadge"]').forEach(badge => {
                     badge.classList.remove('unlocked');
                 });
@@ -1929,6 +2216,7 @@
         function resetSpellBee() {
             currentSpellStage = 0;
             spellStageScores = [];
+            spellTotalStars = 0;
             updateSpellProgress();
             document.getElementById('spellWord').textContent = 'Click "Start Spelling" to begin! 🐝';
             document.getElementById('spellStartBtn').style.display = 'block';
@@ -1944,6 +2232,7 @@
         function startSpelling() {
             currentSpellStage = 0;
             spellStageScores = [];
+            spellTotalStars = 0;
             getNewWord();
             document.getElementById('spellStartBtn').style.display = 'none';
         }
@@ -1978,15 +2267,11 @@
                 
                 document.getElementById('spellWord').textContent = '🎧 Listen carefully and spell the word!';
                 
-                
-                // Show controls and input
                 document.getElementById('playWordBtn').style.display = 'block';
                 document.getElementById('playUsageBtn').style.display = 'block';
                 document.getElementById('checkSpellBtn').style.display = 'block';
                 document.getElementById('spellInputContainer').style.display = 'block';
                 
-                
-                // Play audio automatically and track it
                 const audio = new Audio(data.audio_word);
                 currentAudioPlaying = audio;
                 audio.play();
@@ -1994,7 +2279,6 @@
                     currentAudioPlaying = null;
                 };
                 
-                // Focus on input
                 setTimeout(() => {
                     document.getElementById('spellingInput').focus();
                 }, 500);
@@ -2040,12 +2324,10 @@
                 spellStageScores.push(data.correct ? 100 : 0);
                 spellTotalStars += data.stars;
                 
-                // Trigger confetti if perfect score
                 if (data.stars === 3) {
                     createConfetti();
                 }
                 
-                // Display letter-by-letter comparison
                 let comparisonHTML = '<div style="margin: 20px 0; font-size: 24px; line-height: 2;">';
                 data.letter_comparison.forEach((letter, index) => {
                     setTimeout(() => {
@@ -2061,7 +2343,6 @@
                 });
                 comparisonHTML += '</div>';
                 
-                // Display stars
                 let starsHTML = '<div class="stars">';
                 for (let i = 0; i < 3; i++) {
                     setTimeout(() => {
@@ -2083,13 +2364,19 @@
                     </div>
                 `;
                 
-                // Update stats
                 document.getElementById('spellCurrentScore').textContent = data.correct ? '100' : '0';
                 document.getElementById('spellTotalScore').textContent = spellTotalStars;
                 updateSpellAccuracy();
                 updateSpellBadges();
                 
-                // Auto-advance after 3 seconds
+                // Award XP only after all 5 stages
+                if (currentSpellStage >= totalStages) {
+                    const averageScore = spellStageScores.reduce((a, b) => a + b, 0) / spellStageScores.length;
+                    const totalXPEarned = Math.floor(averageScore / 2) * totalStages;
+                    const perfectBonus = spellTotalStars === 15 ? 30 : 0;
+                    awardXP(totalXPEarned + perfectBonus, 'spellbee', averageScore, spellTotalStars);
+                }
+                
                 setTimeout(() => {
                     getNewWord();
                 }, 3500);
@@ -2131,10 +2418,8 @@
             const modalScore = document.getElementById('modalScore');
             const modalMessage = document.getElementById('modalMessage');
             
-            // Clear previous stars
             modalStars.innerHTML = '';
             
-            // Calculate final performance
             const finalStarCount = Math.floor(spellTotalStars / 5);
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
@@ -2222,12 +2507,13 @@
                     </div>
                 `;
                 
-                // Auto-play audio and track it
                 const audio = new Audio(data.audio);
                 currentAudioPlaying = audio;
                 audio.play();
                 audio.onended = function() {
                     currentAudioPlaying = null;
+                    // Award XP for learning word meaning
+                    awardXP(10, 'meanings', 100, 1);
                 };
             })
             .catch(error => {

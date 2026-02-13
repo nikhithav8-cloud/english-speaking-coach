@@ -10,15 +10,21 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
+import random
 
 # ================= SETUP =================
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")  # Add this to .env file
+app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
 
 conversation_context = ""
+
+# ================= ANTI-REPETITION TRACKING =================
+recent_sentences = []
+recent_words = []
+MAX_HISTORY = 20
 
 # ================= DATABASE SETUP =================
 def init_db():
@@ -26,12 +32,14 @@ def init_db():
     conn = sqlite3.connect('students.db')
     c = conn.cursor()
     
-    # Create students table
+    # Create users table (for both students and teachers)
     c.execute('''
-        CREATE TABLE IF NOT EXISTS students (
+        CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role TEXT NOT NULL CHECK(role IN ('student', 'teacher')),
             name TEXT NOT NULL,
-            roll_no TEXT UNIQUE NOT NULL,
+            roll_no TEXT UNIQUE,
+            email TEXT UNIQUE,
             password_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -43,7 +51,35 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             student_id INTEGER NOT NULL,
             login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (student_id) REFERENCES students (id)
+            FOREIGN KEY (student_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Create student progress table for XP system
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS student_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            roll_no TEXT UNIQUE NOT NULL,
+            xp INTEGER DEFAULT 0,
+            total_stars INTEGER DEFAULT 0,
+            total_sessions INTEGER DEFAULT 0,
+            average_accuracy REAL DEFAULT 0,
+            last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (roll_no) REFERENCES users (roll_no)
+        )
+    ''')
+    
+    # Create activity log table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            roll_no TEXT NOT NULL,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            mode TEXT NOT NULL,
+            score REAL,
+            xp_earned INTEGER,
+            stars_earned INTEGER,
+            FOREIGN KEY (roll_no) REFERENCES users (roll_no)
         )
     ''')
     
@@ -58,7 +94,25 @@ def login_required(f):
     """Decorator to require login for certain routes"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'student_id' not in session:
+        if 'user_id' not in session:
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def teacher_required(f):
+    """Decorator to require teacher role"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'teacher':
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def student_required(f):
+    """Decorator to require student role"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'student':
             return redirect(url_for('login_page'))
         return f(*args, **kwargs)
     return decorated_function
@@ -77,10 +131,9 @@ def speak_to_file(text, slow=False):
     gTTS(text=text, lang="en", slow=slow).save(path)
     return "/" + path
 
-# ================= NORMAL CONVERSATION AI =================
+# ================= AI FUNCTIONS =================
 def english_coach(child_text):
     global conversation_context
-
     prompt = f"""
 You are an English speaking coach for children aged 6 to 15.
 
@@ -104,56 +157,25 @@ Conversation so far:
 Child says:
 "{child_text}"
 """
-
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3
     )
-
     reply = response.choices[0].message.content.strip()
-
     conversation_context += f"\nChild: {child_text}\nAssistant: {reply}"
     conversation_context = conversation_context[-1200:]
-
     return reply
 
-# ================= ROLEPLAY COACH =================
 def roleplay_coach(child_text, roleplay_type):
     global conversation_context
-
     roles = {
-        "teacher": """
-You are a kind school teacher.
-Help the student learn English.
-Ask study-related questions.
-Be encouraging and patient.
-""",
-        "friend": """
-You are a friendly classmate.
-Talk casually and happily.
-Ask daily-life questions.
-Be cheerful and supportive.
-""",
-        "interviewer": """
-You are a job interviewer.
-Be polite and professional.
-Ask short interview questions.
-Be encouraging but professional.
-""",
-        "viva": """
-You are a viva examiner.
-Ask academic project questions.
-Focus on understanding.
-Be fair and encouraging.
-"""
+        "teacher": "You are a kind school teacher.\nHelp the student learn English.\nAsk study-related questions.\nBe encouraging and patient.",
+        "friend": "You are a friendly classmate.\nTalk casually and happily.\nAsk daily-life questions.\nBe cheerful and supportive.",
+        "interviewer": "You are a job interviewer.\nBe polite and professional.\nAsk short interview questions.\nBe encouraging but professional.",
+        "viva": "You are a viva examiner.\nAsk academic project questions.\nFocus on understanding.\nBe fair and encouraging."
     }
-
-    role_instruction = roles.get(
-        roleplay_type,
-        "You are a friendly English speaking partner."
-    )
-
+    role_instruction = roles.get(roleplay_type, "You are a friendly English speaking partner.")
     prompt = f"""
 {role_instruction}
 
@@ -179,402 +201,291 @@ Conversation so far:
 Student says:
 "{child_text}"
 """
-
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3
     )
-
     reply = response.choices[0].message.content.strip()
-
     conversation_context += f"\nStudent: {child_text}\nAssistant: {reply}"
     conversation_context = conversation_context[-1200:]
-
     return reply
 
-# ================= WORD/SENTENCE HISTORY TRACKING =================
-# Store recently used sentences and words to avoid repetition
-recent_sentences = []
-recent_words = []
-MAX_HISTORY = 20  # Remember last 20 sentences/words
-
-# ================= IMPROVED REPEAT MODE AI WITH CATEGORIES AND DIFFICULTY =================
 def generate_repeat_sentence(category="general", difficulty="easy"):
+    """Generate a sentence for repeat mode without repetition"""
     global recent_sentences
     
-    # Define word limits for each difficulty
-    word_limits = {
-        "easy": "3 to 5 words",
-        "medium": "6 to 8 words",
-        "hard": "9 to 12 words"
-    }
-   
-    # Enhanced category-specific prompts with better context and examples
+    word_limits = {"easy": "3 to 5 words", "medium": "6 to 8 words", "hard": "9 to 12 words"}
+    
     category_details = {
         "general": {
             "description": "everyday activities, common objects, and simple actions",
-            "easy": ["I love ice cream", "The sun is bright", "Mom reads books"],
-            "medium": ["I brush my teeth every morning", "The blue sky looks very beautiful"],
-            "hard": ["My favorite hobby is drawing colorful pictures in my notebook"]
+            "easy": ["I love ice cream", "The sun is bright", "Mom reads books", "I play outside", "Birds fly high",
+                     "Dad drives car", "We eat pizza", "Flowers smell nice", "Rain makes puddles", "Stars shine bright"],
+            "medium": ["I brush my teeth every morning", "The blue sky looks very beautiful", "My dog runs in the park",
+                      "We eat dinner together daily", "She draws pictures with colors", "The cat sleeps on bed",
+                      "Children play games at school", "I drink water when thirsty", "Books help us learn things"],
+            "hard": ["My favorite hobby is drawing colorful pictures in my notebook", 
+                    "Every morning I wake up early and help my mom",
+                    "The friendly teacher explains the lesson very clearly",
+                    "We should always be kind and helpful to everyone around",
+                    "Reading books makes us smarter and more knowledgeable every day"]
         },
         "animals": {
-            "description": "animals, pets, wildlife, and their behaviors",
-            "easy": ["Dogs can bark loudly", "Cats like to sleep", "Birds fly very high"],
-            "medium": ["My rabbit eats fresh carrots daily", "The elephant has a very long trunk"],
-            "hard": ["The playful dolphin jumps high above the sparkling blue ocean waves"]
+            "description": "animals, their sounds, and behaviors",
+            "easy": ["Dogs bark loudly", "Cats drink milk", "Birds sing songs", "Fish swim fast", "Cows eat grass",
+                     "Horses run quick", "Ducks say quack", "Lions roar loud", "Bears sleep long", "Monkeys climb trees"],
+            "medium": ["The brown dog plays with a ball", "My pet cat sleeps on the sofa", 
+                      "Colorful birds fly in the sky", "Little fish swim in the pond",
+                      "The white rabbit hops around happily", "Elephants have very long trunks",
+                      "Tigers are big striped cats", "Dolphins jump in the ocean"],
+            "hard": ["The big elephant uses its trunk to drink water every day",
+                    "My pet dog loves to chase butterflies in the garden",
+                    "The clever monkey climbs trees very quickly and easily",
+                    "Beautiful peacocks spread their colorful feathers when dancing",
+                    "Tiny hummingbirds can fly backwards and hover in the air"]
         },
         "food": {
-            "description": "food items, meals, fruits, vegetables, and cooking",
-            "easy": ["Pizza tastes really good", "I drink fresh milk", "Apples are so sweet"],
-            "medium": ["I eat healthy vegetables every single day", "My mom makes delicious chocolate cookies"],
-            "hard": ["For breakfast I enjoy eating scrambled eggs with crispy golden toast"]
+            "description": "food items, meals, and eating",
+            "easy": ["I eat apples", "Pizza tastes good", "Milk is white", "Bread is soft", "Ice cream melts",
+                     "Cookies are sweet", "Juice is cold", "Cake is yummy", "Soup is hot", "Eggs are round"],
+            "medium": ["I enjoy eating chocolate ice cream", "Fresh vegetables are good for health",
+                      "Mom makes delicious pasta for lunch", "Orange juice is my favorite drink",
+                      "Hot soup warms me up quickly", "Strawberries taste sweet and juicy",
+                      "I love eating crunchy potato chips", "Sandwiches are perfect for picnics"],
+            "hard": ["My grandmother makes the most delicious cookies in the whole world",
+                    "We should eat healthy fruits and vegetables every single day",
+                    "The restaurant serves fresh and tasty food to all customers",
+                    "Drinking water keeps our body healthy and strong always",
+                    "Breakfast is the most important meal of the entire day"]
         },
         "sports": {
-            "description": "sports, games, physical activities, and exercise",
-            "easy": ["I can run fast", "Soccer is so fun", "We play basketball well"],
-            "medium": ["My sister swims in the pool today", "I practice tennis with my best friend"],
-            "hard": ["Every morning I ride my bicycle to the park with my friends"]
+            "description": "sports, games, and physical activities",
+            "easy": ["I play football", "Run very fast", "Jump rope daily", "Swim in pool", "Kick the ball",
+                     "Throw the ball", "Catch it quick", "Hit the target", "Race with friends", "Climb the rope"],
+            "medium": ["I practice basketball every single day", "Running in the park is fun",
+                      "My friends play cricket together happily", "Swimming keeps us healthy and fit",
+                      "The team won the match yesterday", "Soccer is played with feet",
+                      "Tennis players use special rackets always", "Cycling helps build strong muscles"],
+            "hard": ["Playing outdoor games helps us stay healthy and active always",
+                    "My favorite sport is basketball because it's exciting and fun",
+                    "The athletes train very hard to win the championship trophy",
+                    "Regular exercise makes our bodies stronger and more energetic daily",
+                    "Teamwork is very important when playing any sport together"]
         },
         "feelings": {
-            "description": "emotions, feelings, moods, and personal expressions",
-            "easy": ["I feel very happy", "She looks quite sad", "We are so excited"],
-            "medium": ["My brother feels proud of his work", "I am really nervous about the test"],
-            "hard": ["When my friends visit me I always feel extremely happy and joyful"]
+            "description": "emotions, feelings, and states of being",
+            "easy": ["I feel happy", "Mom is sad", "Brother is angry", "Sister feels tired", "I am excited",
+                     "Dad is proud", "I feel scared", "She is brave", "He seems worried", "We are cheerful"],
+            "medium": ["I feel very happy when playing", "My friend is feeling sad today",
+                      "The movie made everyone laugh loudly", "I get excited about birthday parties",
+                      "Helping others makes me feel good", "Sometimes I feel nervous before tests",
+                      "My sister feels proud of her artwork", "The surprise made him very happy"],
+            "hard": ["When I help my friends I feel very proud and happy",
+                    "My little sister gets scared during thunderstorms at night",
+                    "Winning the competition made the entire team feel wonderful",
+                    "Sharing toys with others shows that we care about them",
+                    "Being kind to everyone makes the world a better place"]
         },
         "colors": {
-            "description": "colors, shapes, sizes, and visual descriptions",
-            "easy": ["The car is red", "I see yellow flowers", "Her dress looks blue"],
-            "medium": ["The rainbow has many beautiful bright colors", "My new backpack is dark purple color"],
-            "hard": ["The gigantic orange pumpkin sits in our garden looking absolutely magnificent"]
+            "description": "colors and their descriptions",
+            "easy": ["Sky is blue", "Grass is green", "Sun is yellow", "Roses are red", "Clouds are white",
+                     "Night is black", "Orange is bright", "Purple flowers bloom", "Pink is pretty", "Brown dirt falls"],
+            "medium": ["The beautiful rainbow has many colors", "My favorite color is bright blue",
+                      "Red roses bloom in the garden", "The green leaves look very fresh",
+                      "Yellow butterflies fly near flowers happily", "White snow covers the ground",
+                      "Orange pumpkins grow in the field", "Purple grapes taste very sweet"],
+            "hard": ["The colorful painting has red blue yellow and green colors",
+                    "My room walls are painted in light blue color",
+                    "The sunset sky shows beautiful orange and pink shades",
+                    "Rainbows appear when sunlight passes through water droplets magically",
+                    "Artists mix different colors together to create new beautiful shades"]
         },
         "family": {
-            "description": "family members, relatives, friends, and relationships",
-            "easy": ["Dad helps me learn", "I love my sister", "Grandma tells great stories"],
-            "medium": ["My cousin visits us every summer vacation", "Uncle Tom teaches me how to swim"],
-            "hard": ["On weekends my whole family enjoys eating dinner together at the table"]
+            "description": "family members and relationships",
+            "easy": ["I love mom", "Dad helps me", "Sister is kind", "Brother plays games", "Grandma tells stories",
+                     "Grandpa is funny", "Baby cries loud", "Uncle visits us", "Aunt bakes cake", "Cousin is fun"],
+            "medium": ["My mother cooks delicious food daily", "Dad takes me to school everyday",
+                      "My sister helps with homework always", "Brother plays video games with me",
+                      "Grandparents visit us every weekend regularly", "My aunt makes tasty cookies",
+                      "Uncle tells us funny jokes", "Cousins play together at parties"],
+            "hard": ["My entire family goes on vacation together every summer season",
+                    "Mom and dad work very hard to give us everything",
+                    "I love spending quality time with all my family members",
+                    "Grandparents always share interesting stories from their childhood days",
+                    "Family dinners are special times when everyone talks and laughs"]
         },
         "school": {
-            "description": "school activities, learning, education, and classroom experiences",
-            "easy": ["I like my teacher", "Math class is fun", "We learn new things"],
-            "medium": ["My favorite subject in school is science", "I always do my homework after school"],
-            "hard": ["During art class we create beautiful paintings using watercolors and special brushes"]
+            "description": "school, learning, and education",
+            "easy": ["I go school", "Teacher is nice", "Books are heavy", "Math is hard", "I study daily",
+                     "Tests are scary", "Lunch is yummy", "Friends play together", "Pencils write words", "Classes start early"],
+            "medium": ["My teacher explains lessons very clearly", "I carry my school bag everyday",
+                      "Math homework is quite challenging today", "The library has many interesting books",
+                      "Science class is really fun and exciting", "Friends help each other with studies",
+                      "Reading improves our vocabulary and knowledge", "Art class lets us be creative"],
+            "hard": ["My school has a big playground where we play games",
+                    "Every morning I wake up early to catch the bus",
+                    "The teacher gives us homework to practice at home daily",
+                    "Learning new things at school makes us smarter every day",
+                    "Good students always pay attention and complete their work on time"]
         }
     }
-   
-    category_info = category_details.get(category, category_details["general"])
-    category_context = category_info["description"]
-    word_limit = word_limits.get(difficulty, "3 to 5 words")
-   
-    # Get examples based on difficulty level
-    examples = category_info.get(difficulty, category_info.get("easy", []))
-   
-    # Fallback to default examples if none found
-    if not examples or len(examples) < 3:
-        examples = ["I like to play", "The sun is bright", "We have fun together"]
+
+    # Get category info
+    cat_info = category_details.get(category, category_details["general"])
+    description = cat_info["description"]
+    examples = cat_info.get(difficulty, cat_info["easy"])
     
-    # Add recent sentences to avoid list
-    avoid_list = ""
-    if recent_sentences:
-        avoid_list = f"\n\nIMPORTANT: DO NOT create sentences similar to these recent ones:\n" + "\n".join([f"- {s}" for s in recent_sentences[-10:]])
+    # Filter out recently used sentences
+    available_examples = [ex for ex in examples if ex not in recent_sentences]
+    
+    # If all sentences have been used, reset the history but keep last 5
+    if not available_examples:
+        recent_sentences = recent_sentences[-5:] if len(recent_sentences) > 5 else []
+        available_examples = [ex for ex in examples if ex not in recent_sentences]
+    
+    # If still no available examples (shouldn't happen), use all
+    if not available_examples:
+        available_examples = examples
+    
+    # Select a random sentence
+    selected_sentence = random.choice(available_examples)
+    
+    # Add to recent sentences
+    recent_sentences.append(selected_sentence)
+    
+    # Keep only last MAX_HISTORY sentences
+    if len(recent_sentences) > MAX_HISTORY:
+        recent_sentences = recent_sentences[-MAX_HISTORY:]
+    
+    return selected_sentence
 
-    # Generate unique random seed for more variety
-    import random
-    random_seed = random.randint(1, 10000)
 
-    prompt = f"""You are an expert English teacher for children aged 6 to 15.
-
-TASK: Create ONE completely UNIQUE and CREATIVE sentence for speaking practice.
-
-CATEGORY: {category_context}
-DIFFICULTY: {difficulty}
-WORD COUNT: Must be {word_limit} exactly
-
-RANDOMNESS SEED: {random_seed} (use this to create variety)
-
-STRICT RULES:
-1. Return ONLY the sentence - no quotation marks, no punctuation, no extra text
-2. Use simple, natural vocabulary appropriate for children
-3. Make it interesting and relatable to kids' daily lives
-4. Use present tense or simple past tense
-5. Avoid complex grammar structures
-6. Make it sound like something a child would actually say
-7. Keep it positive and encouraging
-8. BE CREATIVE - think of unique situations and scenarios
-9. Use different verbs, nouns, and subjects each time
-
-GOOD EXAMPLES for {category} ({difficulty}):
-- {examples[0]}
-- {examples[1]}
-- {examples[2]}
-
-BAD EXAMPLES (avoid these):
-- Too formal: "One should endeavor to maintain cleanliness"
-- Too complex: "Notwithstanding the circumstances"
-- Awkward phrasing: "The eating of vegetables is done by me"
-- Negative: "I hate doing homework"
-{avoid_list}
-
-Now create ONE COMPLETELY NEW and DIFFERENT sentence following all rules above."""
-
-    # Try up to 3 times to get a unique sentence
-    max_attempts = 3
-    for attempt in range(max_attempts):
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=1.2,  # INCREASED from 0.9 for more randomness
-            max_tokens=50,
-            top_p=0.95  # Add top_p for more diversity
-        )
-
-        sentence = response.choices[0].message.content.strip()
-       
-        # Clean up the sentence
-        sentence = re.sub(r'^["\']+|["\']+$', '', sentence)
-        sentence = re.sub(r'[.!?;:,]+$', '', sentence)
-        sentence = sentence.strip()
-       
-        # Capitalize first letter
-        if sentence:
-            sentence = sentence[0].upper() + sentence[1:]
-        
-        # Check if sentence is unique enough
-        is_unique = True
-        for recent in recent_sentences:
-            similarity = SequenceMatcher(None, sentence.lower(), recent.lower()).ratio()
-            if similarity > 0.7:  # If more than 70% similar, try again
-                is_unique = False
-                break
-        
-        if is_unique or attempt == max_attempts - 1:
-            # Add to history
-            recent_sentences.append(sentence)
-            if len(recent_sentences) > MAX_HISTORY:
-                recent_sentences.pop(0)
-            break
-   
-    return sentence
-
-# ================= SPELL BEE AI =================
 def generate_spell_word(difficulty="easy"):
+    """Generate a word for spelling without repetition"""
     global recent_words
     
-    difficulty_ranges = {
-        "easy": "3 to 5 letter words that are common and simple for children aged 6-10",
-        "medium": "6 to 8 letter words that are moderately challenging for children aged 10-13",
-        "hard": "9 to 12 letter words that are challenging for children aged 13-15"
+    word_pools = {
+        "easy": ["cat", "dog", "sun", "run", "fun", "hat", "bat", "rat", "pen", "hen",
+                 "cup", "bus", "bed", "red", "leg", "bag", "fan", "can", "ten", "net",
+                 "wet", "jet", "pet", "set", "box", "fox", "six", "mix", "pig", "big",
+                 "hot", "pot", "top", "hop", "mop", "zip", "tip", "dip", "cut", "nut"],
+        "medium": ["apple", "table", "happy", "money", "water", "tiger", "banana", "flower",
+                   "garden", "winter", "summer", "mother", "father", "sister", "better",
+                   "letter", "number", "dinner", "butter", "purple", "yellow", "orange",
+                   "Monday", "Friday", "Sunday", "pencil", "window", "rabbit", "market",
+                   "simple", "castle", "people", "circle", "middle", "bottle", "little",
+                   "bubble", "double", "jungle", "candle", "handle", "puzzle", "turtle"],
+        "hard": ["beautiful", "wonderful", "elephant", "tomorrow", "yesterday", "chocolate",
+                 "hamburger", "basketball", "butterfly", "strawberry", "restaurant",
+                 "dictionary", "adventure", "delicious", "important", "different",
+                 "incredible", "vegetables", "understand", "comfortable", "celebration",
+                 "imagination", "encyclopedia", "refrigerator", "spectacular",
+                 "communication", "responsibility", "extraordinary", "accomplishment"]
     }
     
-    # Expanded word banks for more variety
-    word_banks = {
-        "easy": ["cat", "dog", "book", "sun", "moon", "tree", "fish", "bird", "star", "ball", 
-                 "cake", "milk", "shoe", "hat", "bed", "pen", "cup", "door", "hand", "foot",
-                 "red", "blue", "big", "happy", "home", "play", "jump", "run", "sit", "eat",
-                 "hot", "cold", "new", "old", "day", "boy", "girl", "mom", "dad", "bike",
-                 "game", "toy", "park", "farm", "pond", "hill", "rain", "snow", "wind", "corn"],
-        "medium": ["elephant", "computer", "rainbow", "butterfly", "mountain", "hospital", "library",
-                   "garden", "kitchen", "teacher", "doctor", "student", "picture", "monster", "dragon",
-                   "princess", "castle", "rocket", "planet", "jungle", "desert", "ocean", "island",
-                   "village", "city", "market", "station", "church", "temple", "bridge", "tunnel",
-                   "adventure", "treasure", "mystery", "secret", "magic", "science", "history", "music",
-                   "painting", "dancing", "singing", "swimming", "reading", "writing", "cooking", "building"],
-        "hard": ["magnificent", "extraordinary", "temperature", "dictionary", "calculator", "independence",
-                 "restaurant", "technology", "encyclopedia", "understanding", "celebration", "investigation",
-                 "photography", "archaeology", "astronomy", "geography", "biography", "literature",
-                 "mathematics", "multiplication", "environment", "government", "parliament", "democratic",
-                 "responsibility", "appreciation", "imagination", "organization", "competition", "cooperation",
-                 "communication", "transportation", "information", "education", "pollution", "conservation",
-                 "civilization", "refrigerator", "entertainment", "electricity", "necessary", "opportunity"]
-    }
+    words = word_pools.get(difficulty, word_pools["easy"])
     
-    # Add recent words to avoid list
-    avoid_list = ""
-    if recent_words:
-        avoid_list = f"\n\nIMPORTANT: DO NOT use these recent words:\n" + ", ".join(recent_words[-15:])
+    # Filter out recently used words
+    available_words = [w for w in words if w not in recent_words]
     
-    # Generate unique random seed for more variety
-    import random
-    random_seed = random.randint(1, 10000)
-   
-    prompt = f"""You are a Spelling Bee coach for children.
+    # If all words have been used, reset the history but keep last 10
+    if not available_words:
+        recent_words = recent_words[-10:] if len(recent_words) > 10 else []
+        available_words = [w for w in words if w not in recent_words]
+    
+    # If still no available words (shouldn't happen), use all
+    if not available_words:
+        available_words = words
+    
+    # Select a random word
+    selected_word = random.choice(available_words)
+    
+    # Add to recent words
+    recent_words.append(selected_word)
+    
+    # Keep only last MAX_HISTORY words
+    if len(recent_words) > MAX_HISTORY:
+        recent_words = recent_words[-MAX_HISTORY:]
+    
+    return selected_word
 
-CRITICAL INSTRUCTION: You must output EXACTLY ONE WORD and ABSOLUTELY NOTHING ELSE.
 
-DIFFICULTY: {difficulty}
-REQUIREMENT: {difficulty_ranges.get(difficulty, difficulty_ranges['easy'])}
+def get_word_sentence_usage(word):
+    """Generate a sentence using the word"""
+    prompt = f"""Create ONE simple sentence using the word "{word}" for children aged 6-15.
 
-RANDOMNESS SEED: {random_seed}
+Requirements:
+- Must use the word "{word}"
+- Very simple, clear sentence
+- 5 to 10 words total
+- Easy to understand
 
-STRICT OUTPUT RULES - READ CAREFULLY:
-1. Output ONLY a single word
-2. NO quotes, NO punctuation, NO spaces, NO commas, NO explanation
-3. Just the word itself - one word on one line
-4. The word must contain ONLY letters (a-z)
-5. Do NOT output multiple words separated by commas
-6. Do NOT output a list of words
-7. Do NOT add any text before or after the word
+Return ONLY the sentence, nothing else."""
 
-WORD SELECTION RULES:
-- Use age-appropriate vocabulary
-- Choose interesting words children encounter in daily life or school
-- Avoid proper nouns, technical jargon, or rarely used words
-- The word should be spell-able by listening to its pronunciation
-- Choose words from different themes: nature, animals, food, school, sports, emotions, places, jobs, objects, actions
-
-CORRECT OUTPUT EXAMPLES (output exactly like this):
-elephant
-computer
-beautiful
-
-INCORRECT OUTPUT EXAMPLES (NEVER do this):
-"elephant"
-elephant, computer, beautiful
-The word is: elephant
-elephant.
-{avoid_list}
-
-NOW OUTPUT EXACTLY ONE WORD:"""
-
-    # Try up to 5 times to get a clean single word
-    max_attempts = 5
-    for attempt in range(max_attempts):
+    try:
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.9,  # Reduced from 1.3 for more controlled output
-            max_tokens=10,    # Reduced from 20 to limit output
-            top_p=0.9
+            temperature=0.7,
+            max_tokens=50
         )
+        sentence = response.choices[0].message.content.strip()
+        sentence = sentence.replace('"', '').replace("'", '').strip()
+        return sentence
+    except:
+        return f"The {word} is very nice."
 
-        word = response.choices[0].message.content.strip()
-        
-        # Aggressive cleaning to ensure single word
-        # Remove all quotes and punctuation
-        word = re.sub(r'^["\'`]+|["\'`]+$', '', word)
-        word = re.sub(r'[.!?;:,\s\n\r]+', '', word)
-        word = word.lower()
-        
-        # Take only the first word if multiple words somehow got through
-        if ' ' in word or '\n' in word or ',' in word:
-            word = word.split()[0].split(',')[0].split('\n')[0]
-        
-        # Remove any non-alphabetic characters
-        word = re.sub(r'[^a-z]', '', word)
-        
-        # Validate word length based on difficulty
-        min_len = 3 if difficulty == "easy" else (6 if difficulty == "medium" else 9)
-        max_len = 5 if difficulty == "easy" else (8 if difficulty == "medium" else 12)
-        
-        # Check if word is valid and unique
-        if (word and 
-            min_len <= len(word) <= max_len and 
-            word.isalpha() and 
-            (word not in recent_words or attempt == max_attempts - 1)):
-            # Add to history
-            recent_words.append(word)
-            if len(recent_words) > MAX_HISTORY:
-                recent_words.pop(0)
-            break
-        
-        # If invalid, try fallback from word bank on last attempt
-        if attempt == max_attempts - 1:
-            available_words = [w for w in word_banks.get(difficulty, word_banks["easy"]) 
-                             if w not in recent_words]
-            if available_words:
-                word = random.choice(available_words)
-                recent_words.append(word)
-                if len(recent_words) > MAX_HISTORY:
-                    recent_words.pop(0)
-   
-    return word
 
-def get_word_sentence_usage(word):
-    prompt = f"""Create ONE simple example sentence using the word "{word}".
-
-RULES:
-1. The sentence must be simple and easy to understand for children aged 6-15
-2. The sentence should clearly show the meaning of the word
-3. Use simple vocabulary in the rest of the sentence
-4. Make it relatable to children's daily life
-5. Return ONLY the sentence - no quotes, no extra text
-
-Example format: "The elephant is very big."
-
-Now create a sentence using "{word}"."""
-
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.5,
-        max_tokens=50
-    )
-
-    sentence = response.choices[0].message.content.strip()
-    sentence = re.sub(r'^["\']+|["\']+$', '', sentence)
-   
-    return sentence
-
-# ================= WORD MEANINGS AI =================
 def get_word_meaning(word):
-    prompt = f"""You are an English teacher explaining word meanings to children aged 6 to 15.
+    """Get meaning, usage, and tips for a word"""
+    prompt = f"""Explain the word "{word}" to a child aged 6-15.
 
-Word: "{word}"
+Respond in this EXACT format:
 
-Provide a clear, simple explanation of this word.
+MEANING: <simple definition in one sentence>
+EXAMPLE: <example sentence using the word>
+TYPE: <noun/verb/adjective/etc>
+TIP: <memory tip or helpful hint>
 
-FORMAT YOUR RESPONSE EXACTLY AS:
-MEANING: <simple definition in 1-2 sentences>
-EXAMPLE: <one simple example sentence using the word>
-TYPE: <noun/verb/adjective/adverb/etc>
-TIP: <one helpful tip about using this word>
+Keep everything very simple and child-friendly."""
 
-RULES:
-1. Use very simple language that children can understand
-2. Avoid complex terminology
-3. Make examples relatable to children's daily life
-4. Be encouraging and positive
-5. If the word has multiple meanings, focus on the most common one
-6. Keep explanations short and clear"""
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            max_tokens=200
+        )
+        return response.choices[0].message.content.strip()
+    except:
+        return f"MEANING: {word} is a word\nEXAMPLE: I know the word {word}\nTYPE: word\nTIP: Practice saying it"
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.4,
-        max_tokens=200
-    )
 
-    return response.choices[0].message.content.strip()
-
-# ================= WORD-BY-WORD COMPARISON =================
 def compare_words(student_text, correct_text):
+    """Compare student's spoken words with correct sentence"""
     student_words = student_text.lower().split()
     correct_words = correct_text.lower().split()
-   
     comparison = []
-   
     for i, correct_word in enumerate(correct_words):
         if i < len(student_words):
             student_word = student_words[i]
             similarity = SequenceMatcher(None, student_word, correct_word).ratio()
-           
             if similarity >= 0.8:
                 comparison.append({"word": correct_word, "status": "correct"})
             else:
                 comparison.append({"word": correct_word, "status": "incorrect", "spoken": student_word})
         else:
             comparison.append({"word": correct_word, "status": "missing"})
-   
     return comparison
 
-# ================= LETTER COMPARISON FOR SPELL BEE =================
+
 def compare_spelling(student_spelling, correct_word):
+    """Compare student's spelling with correct word letter by letter"""
     student = student_spelling.lower().strip()
     correct = correct_word.lower().strip()
-   
     comparison = []
     max_len = max(len(student), len(correct))
-   
     for i in range(max_len):
         if i < len(correct):
             correct_letter = correct[i]
@@ -586,83 +497,121 @@ def compare_spelling(student_spelling, correct_word):
                     comparison.append({"letter": correct_letter, "status": "incorrect", "typed": student_letter})
             else:
                 comparison.append({"letter": correct_letter, "status": "missing"})
-   
     return comparison
 
 # ================= AUTHENTICATION ROUTES =================
 @app.route("/")
 def home():
-    """Home page - shows dashboard if logged in, otherwise redirects to login"""
-    if 'student_id' in session:
-        return redirect(url_for('dashboard'))  # CHANGED: redirect to dashboard
+    """Home page - redirect based on role"""
+    if 'user_id' in session:
+        if session.get('role') == 'teacher':
+            return redirect(url_for('teacher_dashboard'))
+        else:
+            return redirect(url_for('dashboard'))
     return redirect(url_for('login_page'))
 
 @app.route("/login")
 def login_page():
     """Show login page"""
-    if 'student_id' in session:
-        return redirect(url_for('dashboard'))  # CHANGED: redirect to dashboard if already logged in
+    if 'user_id' in session:
+        return redirect(url_for('home'))
     return render_template("login.html")
 
 @app.route("/login", methods=["POST"])
 def login():
-    """Handle login"""
+    """Handle login for both students and teachers"""
     data = request.json
-    roll_no = data.get("rollNo")
+    role = data.get("role", "student")
     password = data.get("password")
     
-    if not roll_no or not password:
-        return jsonify({"success": False, "message": "Please provide roll number and password"})
-    
     conn = get_db_connection()
-    student = conn.execute('SELECT * FROM students WHERE roll_no = ?', (roll_no,)).fetchone()
+    
+    if role == "student":
+        roll_no = data.get("rollNo")
+        if not roll_no or not password:
+            return jsonify({"success": False, "message": "Please provide roll number and password"})
+        user = conn.execute('SELECT * FROM users WHERE role=? AND roll_no=?', (role, roll_no)).fetchone()
+    else:  # teacher
+        email = data.get("email")
+        if not email or not password:
+            return jsonify({"success": False, "message": "Please provide email and password"})
+        user = conn.execute('SELECT * FROM users WHERE role=? AND email=?', (role, email)).fetchone()
+    
     conn.close()
     
-    if student and check_password_hash(student['password_hash'], password):
-        # Set session
-        session['student_id'] = student['id']
-        session['student_name'] = student['name']
-        session['roll_no'] = student['roll_no']
+    if user and check_password_hash(user['password_hash'], password):
+        session['user_id'] = user['id']
+        session['name'] = user['name']
+        session['role'] = user['role']
         
-        # Log session
-        conn = get_db_connection()
-        conn.execute('INSERT INTO student_sessions (student_id) VALUES (?)', (student['id'],))
-        conn.commit()
-        conn.close()
+        if role == "student":
+            session['roll_no'] = user['roll_no']
+            session['student_name'] = user['name']  # Store as student_name for dashboard template
+            conn = get_db_connection()
+            conn.execute('INSERT INTO student_sessions (student_id) VALUES (?)', (user['id'],))
+            conn.commit()
+            conn.close()
+        else:
+            session['email'] = user['email']
         
-        return jsonify({"success": True, "message": "Login successful"})
+        return jsonify({"success": True, "message": "Login successful", "name": user['name']})
     else:
-        return jsonify({"success": False, "message": "Invalid roll number or password"})
+        return jsonify({"success": False, "message": "Invalid credentials"})
 
 @app.route("/signup", methods=["POST"])
 def signup():
-    """Handle signup"""
+    """Handle signup for both students and teachers"""
     data = request.json
     name = data.get("name")
-    roll_no = data.get("rollNo")
     password = data.get("password")
+    role = data.get("role", "student")
     
-    if not name or not roll_no or not password:
+    if not name or not password:
         return jsonify({"success": False, "message": "All fields are required"})
     
-    # Check if roll number already exists
     conn = get_db_connection()
-    existing = conn.execute('SELECT * FROM students WHERE roll_no = ?', (roll_no,)).fetchone()
-    
-    if existing:
-        conn.close()
-        return jsonify({"success": False, "message": "Roll number already registered"})
-    
-    # Create new student
     password_hash = generate_password_hash(password)
+    
     try:
-        conn.execute('INSERT INTO students (name, roll_no, password_hash) VALUES (?, ?, ?)',
-                    (name, roll_no, password_hash))
+        if role == "student":
+            roll_no = data.get("rollNo")
+            if not roll_no:
+                return jsonify({"success": False, "message": "Roll number is required"})
+            
+            # Check if exists
+            existing = conn.execute('SELECT * FROM users WHERE roll_no = ?', (roll_no,)).fetchone()
+            if existing:
+                conn.close()
+                return jsonify({"success": False, "message": "Roll number already registered"})
+            
+            # Insert student
+            conn.execute('INSERT INTO users (role, name, roll_no, password_hash) VALUES (?, ?, ?, ?)',
+                        (role, name, roll_no, password_hash))
+            
+            # Initialize progress
+            conn.execute('INSERT INTO student_progress (roll_no, xp, total_stars) VALUES (?, 0, 0)',
+                        (roll_no,))
+        else:  # teacher
+            email = data.get("email")
+            if not email:
+                return jsonify({"success": False, "message": "Email is required"})
+            
+            # Check if exists
+            existing = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+            if existing:
+                conn.close()
+                return jsonify({"success": False, "message": "Email already registered"})
+            
+            # Insert teacher
+            conn.execute('INSERT INTO users (role, name, email, password_hash) VALUES (?, ?, ?, ?)',
+                        (role, name, email, password_hash))
+        
         conn.commit()
         conn.close()
         return jsonify({"success": True, "message": "Account created successfully"})
     except Exception as e:
         conn.close()
+        print(f"Signup error: {e}")
         return jsonify({"success": False, "message": "Error creating account"})
 
 @app.route("/logout")
@@ -671,33 +620,29 @@ def logout():
     session.clear()
     return redirect(url_for('login_page'))
 
-# ================= DASHBOARD ROUTE (NEW) =================
+# ================= STUDENT ROUTES =================
 @app.route("/dashboard")
-@login_required
+@student_required
 def dashboard():
     """Show student dashboard"""
     return render_template("dashboard.html")
 
-# ================= MAIN APPLICATION ROUTES =================
 @app.route("/main")
-@login_required
+@student_required
 def main():
     """Main application page"""
     return render_template("main.html")
 
-# ---------- NORMAL SPEAKING + ROLEPLAY ----------
 @app.route("/process", methods=["POST"])
-@login_required
+@student_required
 def process():
     data = request.json
     user_text = data["text"]
     roleplay = data.get("roleplay")
-
     if roleplay:
         ai_reply = roleplay_coach(user_text, roleplay)
     else:
         ai_reply = english_coach(user_text)
-
     correct = praise = question = ""
     for line in ai_reply.split("\n"):
         if line.startswith("CORRECT:"):
@@ -706,43 +651,30 @@ def process():
             praise = line.replace("PRAISE:", "").strip()
         elif line.startswith("QUESTION:"):
             question = line.replace("QUESTION:", "").strip()
-
     final_text = f"{correct}. {praise} {question}"
     audio = speak_to_file(final_text)
+    return jsonify({"reply": final_text, "audio": audio})
 
-    return jsonify({
-        "reply": final_text,
-        "audio": audio
-    })
-
-# ---------- REPEAT AFTER ME ----------
 @app.route("/repeat_sentence", methods=["POST"])
-@login_required
+@student_required
 def repeat_sentence():
     data = request.json
     category = data.get("category", "general")
     difficulty = data.get("difficulty", "easy")
-   
     sentence = generate_repeat_sentence(category, difficulty)
     audio_normal = speak_to_file(sentence, slow=False)
     audio_slow = speak_to_file(sentence, slow=True)
-
-    return jsonify({
-        "sentence": sentence,
-        "audio": audio_normal,
-        "audio_slow": audio_slow
-    })
+    return jsonify({"sentence": sentence, "audio": audio_normal, "audio_slow": audio_slow})
 
 @app.route("/check_repeat", methods=["POST"])
-@login_required
+@student_required
 def check_repeat():
+    """Check repeat sentence - NO XP awarded here, just return score"""
     data = request.json
     student = data["student"]
     correct = data["correct"]
-
     score = SequenceMatcher(None, student.lower(), correct.lower()).ratio()
     word_comparison = compare_words(student, correct)
-
     if score >= 0.9:
         feedback = "Perfect! Amazing pronunciation!"
         stars = 3
@@ -755,55 +687,41 @@ def check_repeat():
     else:
         feedback = "Keep trying! Speak slowly and clearly."
         stars = 0
-
+    
+    # Return score and stars but DO NOT update XP yet
     return jsonify({
-        "feedback": feedback,
-        "score": round(score * 100),
-        "stars": stars,
+        "feedback": feedback, 
+        "score": round(score * 100), 
+        "stars": stars, 
         "word_comparison": word_comparison
     })
 
-# ---------- SPELL BEE ----------
 @app.route("/spell_word", methods=["POST"])
-@login_required
+@student_required
 def spell_word():
     data = request.json
     difficulty = data.get("difficulty", "easy")
-   
     word = generate_spell_word(difficulty)
     usage = get_word_sentence_usage(word)
-   
-    # Create audio for the word (slow pronunciation)
     audio_word = speak_to_file(word, slow=True)
-   
-    # Create audio for the usage sentence
     audio_sentence = speak_to_file(usage, slow=False)
-   
-    return jsonify({
-        "word": word,
-        "usage": usage,
-        "audio_word": audio_word,
-        "audio_sentence": audio_sentence
-    })
+    return jsonify({"word": word, "usage": usage, "audio_word": audio_word, "audio_sentence": audio_sentence})
 
 @app.route("/check_spelling", methods=["POST"])
-@login_required
+@student_required
 def check_spelling():
+    """Check spelling - NO XP awarded here, just return score"""
     data = request.json
     student_spelling = data["spelling"]
     correct_word = data["correct"]
-   
     student = student_spelling.lower().strip()
     correct = correct_word.lower().strip()
-   
     is_correct = (student == correct)
     letter_comparison = compare_spelling(student, correct)
-   
     if is_correct:
         feedback = "🎉 Perfect! You spelled it correctly!"
         stars = 3
     else:
-        # Calculate similarity for partial credit
         similarity = SequenceMatcher(None, student, correct).ratio()
         if similarity >= 0.8:
             feedback = "Almost there! Check a few letters."
@@ -814,25 +732,22 @@ def check_spelling():
         else:
             feedback = "Try again! Listen carefully to the word."
             stars = 0
-   
+    
+    # Return score but DO NOT update XP yet
     return jsonify({
-        "correct": is_correct,
-        "feedback": feedback,
-        "stars": stars,
-        "letter_comparison": letter_comparison,
+        "correct": is_correct, 
+        "feedback": feedback, 
+        "stars": stars, 
+        "letter_comparison": letter_comparison, 
         "correct_spelling": correct
     })
 
-# ---------- WORD MEANINGS ----------
 @app.route("/get_meaning", methods=["POST"])
-@login_required
+@student_required
 def get_meaning():
     data = request.json
     word = data["word"]
-   
     meaning_response = get_word_meaning(word)
-   
-    # Parse the response
     meaning = usage = word_type = tip = ""
     for line in meaning_response.split("\n"):
         if line.startswith("MEANING:"):
@@ -843,20 +758,216 @@ def get_meaning():
             word_type = line.replace("TYPE:", "").strip()
         elif line.startswith("TIP:"):
             tip = line.replace("TIP:", "").strip()
-   
-    # Generate audio for the complete explanation
     audio_text = f"{word}. {meaning}. For example: {usage}. {tip}"
     audio = speak_to_file(audio_text, slow=False)
-   
+    return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
+
+# ================= XP SYSTEM ROUTES (MODIFIED) =================
+@app.route("/get_student_info")
+@student_required
+def get_student_info():
+    """Get student XP and progress info"""
+    if 'roll_no' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+    
+    roll_no = session['roll_no']
+    conn = get_db_connection()
+    
+    student = conn.execute('SELECT name, roll_no FROM users WHERE roll_no = ?', (roll_no,)).fetchone()
+    progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
+    conn.close()
+    
+    if student and progress:
+        return jsonify({
+            'success': True,
+            'student': {
+                'name': student['name'],
+                'rollNo': student['roll_no'],
+                'xp': progress['xp'],
+                'totalStars': progress['total_stars'],
+                'totalSessions': progress['total_sessions'],
+                'averageAccuracy': round(progress['average_accuracy'], 1)
+            }
+        })
+    else:
+        return jsonify({'success': False, 'message': 'Student not found'})
+
+@app.route("/update_xp", methods=["POST"])
+@student_required
+def update_xp():
+    """
+    Update student XP after COMPLETING A FULL STAGE (5 questions)
+    This should be called from the frontend ONLY when all 5 questions are done
+    """
+    if 'roll_no' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+    
+    data = request.json
+    roll_no = session['roll_no']
+    xp_earned = data.get('xpEarned', 0)
+    mode = data.get('mode', '')
+    score = data.get('score', 0)  # This should be the average score of all 5 questions
+    stars_earned = data.get('starsEarned', 0)  # Total stars from all 5 questions
+    
+    conn = get_db_connection()
+    progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
+    
+    if progress:
+        old_xp = progress['xp']
+        new_xp = old_xp + xp_earned
+        old_level = old_xp // 100 + 1
+        new_level = new_xp // 100 + 1
+        leveled_up = new_level > old_level
+        
+        # Calculate new average accuracy
+        old_avg = progress['average_accuracy']
+        total_sessions = progress['total_sessions']
+        
+        # Update average accuracy (weighted average)
+        if total_sessions == 0:
+            new_avg = score
+        else:
+            new_avg = ((old_avg * total_sessions) + score) / (total_sessions + 1)
+        
+        # Update progress
+        conn.execute('''
+            UPDATE student_progress 
+            SET xp = ?, 
+                total_stars = total_stars + ?, 
+                total_sessions = total_sessions + 1, 
+                average_accuracy = ?,
+                last_active = ?
+            WHERE roll_no = ?
+        ''', (new_xp, stars_earned, new_avg, datetime.now(), roll_no))
+        
+        # Log activity
+        conn.execute('''
+            INSERT INTO activity_log (roll_no, mode, score, xp_earned, stars_earned)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (roll_no, mode, score, xp_earned, stars_earned))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True, 
+            'newXP': new_xp, 
+            'newLevel': new_level, 
+            'leveledUp': leveled_up,
+            'averageAccuracy': round(new_avg, 1)
+        })
+    else:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Progress not found'})
+
+# ================= TEACHER ROUTES =================
+@app.route("/teacher-dashboard")
+@teacher_required
+def teacher_dashboard():
+    """Show teacher dashboard"""
+    return render_template("teacher_dashboard.html")
+
+@app.route("/get_teacher_info")
+@teacher_required
+def get_teacher_info():
+    """Get teacher information"""
+    if 'user_id' not in session:
+        return jsonify({'success': False})
+    
     return jsonify({
-        "word": word,
-        "meaning": meaning,
-        "usage": usage,
-        "type": word_type,
-        "tip": tip,
-        "audio": audio
+        'success': True,
+        'teacher': {
+            'name': session.get('name'),
+            'email': session.get('email')
+        }
     })
+
+@app.route("/get_all_students")
+@teacher_required
+def get_all_students():
+    """Get all students with their progress"""
+    conn = get_db_connection()
+    
+    students = conn.execute('''
+        SELECT u.name, u.roll_no, sp.xp, sp.total_stars, 
+               sp.total_sessions, sp.average_accuracy, sp.last_active
+        FROM users u
+        LEFT JOIN student_progress sp ON u.roll_no = sp.roll_no
+        WHERE u.role = 'student'
+        ORDER BY sp.xp DESC
+    ''').fetchall()
+    
+    conn.close()
+    
+    students_list = []
+    for student in students:
+        students_list.append({
+            'name': student['name'],
+            'rollNo': student['roll_no'],
+            'xp': student['xp'] or 0,
+            'totalStars': student['total_stars'] or 0,
+            'totalSessions': student['total_sessions'] or 0,
+            'averageAccuracy': round(student['average_accuracy'] or 0, 1),
+            'lastActive': student['last_active']
+        })
+    
+    return jsonify({'success': True, 'students': students_list})
+
+@app.route("/get_student_details/<roll_no>")
+@teacher_required
+def get_student_details(roll_no):
+    """Get detailed information for a specific student"""
+    conn = get_db_connection()
+    
+    # Get student basic info and progress
+    student = conn.execute('''
+        SELECT u.name, u.roll_no, sp.xp, sp.total_stars, 
+               sp.total_sessions, sp.average_accuracy, sp.last_active
+        FROM users u
+        LEFT JOIN student_progress sp ON u.roll_no = sp.roll_no
+        WHERE u.roll_no = ? AND u.role = 'student'
+    ''', (roll_no,)).fetchone()
+    
+    if not student:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Student not found'})
+    
+    # Get activity log
+    activities = conn.execute('''
+        SELECT date, mode, score, xp_earned, stars_earned
+        FROM activity_log
+        WHERE roll_no = ?
+        ORDER BY date DESC
+        LIMIT 50
+    ''', (roll_no,)).fetchall()
+    
+    conn.close()
+    
+    activity_list = []
+    for activity in activities:
+        activity_list.append({
+            'date': activity['date'],
+            'mode': activity['mode'],
+            'score': round(activity['score'] or 0, 1),
+            'xpEarned': activity['xp_earned'],
+            'starsEarned': activity['stars_earned']
+        })
+    
+    student_data = {
+        'name': student['name'],
+        'rollNo': student['roll_no'],
+        'xp': student['xp'] or 0,
+        'totalStars': student['total_stars'] or 0,
+        'totalSessions': student['total_sessions'] or 0,
+        'averageAccuracy': round(student['average_accuracy'] or 0, 1),
+        'lastActive': student['last_active'],
+        'activityLog': activity_list
+    }
+    
+    return jsonify({'success': True, 'student': student_data})
+
+import os
 
 # ================= RUN =================
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
