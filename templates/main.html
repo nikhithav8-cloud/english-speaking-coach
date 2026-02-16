@@ -1176,6 +1176,83 @@
                 padding: 30px 40px;
                 font-size: 36px;
             }
+
+            /* MOBILE FIX FOR WORD INPUT */
+            .word-input-container {
+                padding: 20px;
+            }
+            
+            .word-input-box {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .word-input {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            .word-input-box .mic-btn {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 38px;
+            }
+
+            .mascot {
+                font-size: 85px;
+            }
+
+            /* ADDITIONAL MOBILE FIX FOR SMALLER SCREENS */
+            .word-input-container {
+                padding: 15px;
+            }
+            
+            .word-input {
+                padding: 12px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-height: 650px) {
+            .container {
+                padding: 40px 50px;
+            }
+
+            h1 {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+
+            .subtitle {
+                font-size: 20px;
+                margin-bottom: 35px;
+            }
+
+            .mascot {
+                font-size: 100px;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Pulse animation for mascot on load */
+        @keyframes initialPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .mascot.initial-pulse {
+            animation: initialPulse 0.8s ease-out, bounce 2.5s infinite ease-in-out 0.8s;
         }
     </style>
 </head>
