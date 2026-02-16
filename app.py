@@ -11,6 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 import random
+import time
+import hashlib
 
 # ================= SETUP =================
 load_dotenv()
@@ -26,7 +28,12 @@ recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
 
-# ================= FEATURE UNLOCK SYSTEM - CHANGED TO 50 XP =================
+# ================= TTS CACHE AND RATE LIMITING =================
+tts_cache = {}  # In-memory cache for audio files
+last_tts_call = 0  # Track last TTS call time
+MIN_TTS_INTERVAL = 2  # Minimum seconds between TTS calls
+
+# ================= FEATURE UNLOCK SYSTEM - 50 XP =================
 FEATURE_UNLOCKS = {
     1: ["conversation"],  # Level 1: Conversation mode unlocked
     2: ["roleplay"],      # Level 2: Roleplay mode unlocked (50 XP)
@@ -50,7 +57,7 @@ def get_next_unlock(level):
         return {
             'level': next_level,
             'features': FEATURE_UNLOCKS[next_level],
-            'xp_needed': (next_level - 1) * 50 - session.get('current_xp', 0)  # Changed to 50
+            'xp_needed': (next_level - 1) * 50 - session.get('current_xp', 0)
         }
     return None
 
@@ -151,13 +158,78 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# ================= TTS =================
-def speak_to_file(text, slow=False):
+# ================= IMPROVED TTS WITH CACHING AND RATE LIMITING =================
+def speak_to_file(text, slow=False, max_retries=3):
+    """
+    Convert text to speech with caching, rate limiting, and retry logic
+    """
+    global last_tts_call, tts_cache
+    
+    # Create audio directory
     os.makedirs("static/audio", exist_ok=True)
-    filename = f"{uuid.uuid4()}.mp3"
+    
+    # Generate cache key
+    cache_key = hashlib.md5(f"{text}_{slow}".encode()).hexdigest()
+    
+    # Check cache first
+    if cache_key in tts_cache:
+        cached_file = tts_cache[cache_key]
+        if os.path.exists(cached_file):
+            return "/" + cached_file
+    
+    # Rate limiting - ensure minimum interval between calls
+    current_time = time.time()
+    time_since_last_call = current_time - last_tts_call
+    if time_since_last_call < MIN_TTS_INTERVAL:
+        time.sleep(MIN_TTS_INTERVAL - time_since_last_call)
+    
+    # Generate filename
+    filename = f"{cache_key}.mp3"
     path = f"static/audio/{filename}"
-    gTTS(text=text, lang="en", slow=slow).save(path)
-    return "/" + path
+    
+    # Try to generate TTS with retries and exponential backoff
+    for attempt in range(max_retries):
+        try:
+            gTTS(text=text, lang="en", slow=slow).save(path)
+            
+            # Update cache and last call time
+            tts_cache[cache_key] = path
+            last_tts_call = time.time()
+            
+            return "/" + path
+            
+        except Exception as e:
+            error_str = str(e)
+            
+            # If it's a 429 error (rate limit), wait longer
+            if "429" in error_str or "Too Many Requests" in error_str:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) * 5  # 5, 10, 20 seconds
+                    print(f"TTS rate limited. Waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}")
+                    time.sleep(wait_time)
+                else:
+                    print(f"TTS failed after {max_retries} attempts: {e}")
+                    # Return a fallback - empty audio or error message
+                    return create_fallback_audio(text)
+            else:
+                # For other errors, raise immediately
+                print(f"TTS error: {e}")
+                return create_fallback_audio(text)
+    
+    # If all retries failed
+    return create_fallback_audio(text)
+
+def create_fallback_audio(text):
+    """
+    Create a fallback when TTS fails
+    Returns path to a silent audio file or None
+    """
+    # Option 1: Return None and handle in frontend
+    # Option 2: Create a minimal silent MP3
+    # Option 3: Use text-to-display instead
+    
+    print(f"TTS fallback triggered for: {text[:50]}...")
+    return None  # Frontend should handle None gracefully
 
 # ================= AI FUNCTIONS =================
 def english_coach(child_text):
@@ -648,7 +720,7 @@ def logout():
     session.clear()
     return redirect(url_for('login_page'))
 
-# ================= NEW: DELETE ACCOUNT ROUTE =================
+# ================= DELETE ACCOUNT ROUTE =================
 @app.route("/delete_account", methods=["POST"])
 @login_required
 def delete_account():
@@ -729,13 +801,18 @@ def main():
 @app.route("/process", methods=["POST"])
 @student_required
 def process():
+    """Process student speech with improved error handling"""
     data = request.json
     user_text = data["text"]
     roleplay = data.get("roleplay")
+    
+    # Get AI response
     if roleplay:
         ai_reply = roleplay_coach(user_text, roleplay)
     else:
         ai_reply = english_coach(user_text)
+    
+    # Parse response
     correct = praise = question = ""
     for line in ai_reply.split("\n"):
         if line.startswith("CORRECT:"):
@@ -744,20 +821,47 @@ def process():
             praise = line.replace("PRAISE:", "").strip()
         elif line.startswith("QUESTION:"):
             question = line.replace("QUESTION:", "").strip()
+    
     final_text = f"{correct}. {praise} {question}"
-    audio = speak_to_file(final_text)
-    return jsonify({"reply": final_text, "audio": audio})
+    
+    # Try to generate audio with improved error handling
+    try:
+        audio = speak_to_file(final_text)
+    except Exception as e:
+        print(f"TTS error in /process: {e}")
+        audio = None  # Frontend should handle gracefully
+    
+    return jsonify({
+        "reply": final_text, 
+        "audio": audio,
+        "audio_available": audio is not None
+    })
 
 @app.route("/repeat_sentence", methods=["POST"])
 @student_required
 def repeat_sentence():
+    """Generate sentence for repeat mode with improved TTS handling"""
     data = request.json
     category = data.get("category", "general")
     difficulty = data.get("difficulty", "easy")
+    
     sentence = generate_repeat_sentence(category, difficulty)
-    audio_normal = speak_to_file(sentence, slow=False)
-    audio_slow = speak_to_file(sentence, slow=True)
-    return jsonify({"sentence": sentence, "audio": audio_normal, "audio_slow": audio_slow})
+    
+    # Try to generate audio
+    try:
+        audio_normal = speak_to_file(sentence, slow=False)
+        audio_slow = speak_to_file(sentence, slow=True)
+    except Exception as e:
+        print(f"TTS error in /repeat_sentence: {e}")
+        audio_normal = None
+        audio_slow = None
+    
+    return jsonify({
+        "sentence": sentence, 
+        "audio": audio_normal, 
+        "audio_slow": audio_slow,
+        "audio_available": audio_normal is not None
+    })
 
 @app.route("/check_repeat", methods=["POST"])
 @student_required
@@ -791,13 +895,29 @@ def check_repeat():
 @app.route("/spell_word", methods=["POST"])
 @student_required
 def spell_word():
+    """Generate word for spelling with improved TTS handling"""
     data = request.json
     difficulty = data.get("difficulty", "easy")
+    
     word = generate_spell_word(difficulty)
     usage = get_word_sentence_usage(word)
-    audio_word = speak_to_file(word, slow=True)
-    audio_sentence = speak_to_file(usage, slow=False)
-    return jsonify({"word": word, "usage": usage, "audio_word": audio_word, "audio_sentence": audio_sentence})
+    
+    # Try to generate audio
+    try:
+        audio_word = speak_to_file(word, slow=True)
+        audio_sentence = speak_to_file(usage, slow=False)
+    except Exception as e:
+        print(f"TTS error in /spell_word: {e}")
+        audio_word = None
+        audio_sentence = None
+    
+    return jsonify({
+        "word": word, 
+        "usage": usage, 
+        "audio_word": audio_word, 
+        "audio_sentence": audio_sentence,
+        "audio_available": audio_word is not None
+    })
 
 @app.route("/check_spelling", methods=["POST"])
 @student_required
@@ -836,9 +956,13 @@ def check_spelling():
 @app.route("/get_meaning", methods=["POST"])
 @student_required
 def get_meaning():
+    """Get word meaning with improved TTS handling"""
     data = request.json
     word = data["word"]
+    
     meaning_response = get_word_meaning(word)
+    
+    # Parse response
     meaning = usage = word_type = tip = ""
     for line in meaning_response.split("\n"):
         if line.startswith("MEANING:"):
@@ -849,11 +973,27 @@ def get_meaning():
             word_type = line.replace("TYPE:", "").strip()
         elif line.startswith("TIP:"):
             tip = line.replace("TIP:", "").strip()
+    
     audio_text = f"{word}. {meaning}. For example: {usage}. {tip}"
-    audio = speak_to_file(audio_text, slow=False)
-    return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
+    
+    # Try to generate audio
+    try:
+        audio = speak_to_file(audio_text, slow=False)
+    except Exception as e:
+        print(f"TTS error in /get_meaning: {e}")
+        audio = None
+    
+    return jsonify({
+        "word": word, 
+        "meaning": meaning, 
+        "usage": usage, 
+        "type": word_type, 
+        "tip": tip, 
+        "audio": audio,
+        "audio_available": audio is not None
+    })
 
-# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS - CHANGED TO 50 XP =================
+# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS =================
 @app.route("/get_student_info")
 @student_required
 def get_student_info():
@@ -869,7 +1009,7 @@ def get_student_info():
     conn.close()
     
     if student and progress:
-        current_level = (progress['xp'] // 50) + 1  # Changed to 50
+        current_level = (progress['xp'] // 50) + 1
         unlocked_features = get_unlocked_features(current_level)
         next_unlock = get_next_unlock(current_level)
         
@@ -910,8 +1050,8 @@ def update_xp():
     if progress:
         old_xp = progress['xp']
         new_xp = old_xp + xp_earned
-        old_level = old_xp // 50 + 1  # Changed to 50
-        new_level = new_xp // 50 + 1  # Changed to 50
+        old_level = old_xp // 50 + 1
+        new_level = new_xp // 50 + 1
         leveled_up = new_level > old_level
         
         # Check for new feature unlocks
@@ -1013,7 +1153,7 @@ def get_all_students():
             'name': student['name'],
             'rollNo': student['roll_no'],
             'xp': student['xp'] or 0,
-            'level': ((student['xp'] or 0) // 50) + 1,  # Changed to 50
+            'level': ((student['xp'] or 0) // 50) + 1,
             'totalStars': student['total_stars'] or 0,
             'totalSessions': student['total_sessions'] or 0,
             'averageAccuracy': round(student['average_accuracy'] or 0, 1),
@@ -1060,7 +1200,7 @@ def get_student_details(roll_no):
             'starsEarned': activity['stars_earned']
         })
     
-    current_level = ((student['xp'] or 0) // 50) + 1  # Changed to 50
+    current_level = ((student['xp'] or 0) // 50) + 1
     unlocked_features = get_unlocked_features(current_level)
     
     student_data = {
@@ -1077,8 +1217,6 @@ def get_student_details(roll_no):
     }
     
     return jsonify({'success': True, 'student': student_data})
-
-import os
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
