@@ -11,6 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 import random
+import time
+import hashlib
 
 # ================= SETUP =================
 load_dotenv()
@@ -25,6 +27,38 @@ conversation_context = ""
 recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
+
+# ================= TTS CACHE =================
+# Create cache directory
+CACHE_DIR = "static/audio_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+def get_cache_filename(text, slow=False):
+    """Generate a consistent filename based on text content"""
+    # Create a hash of the text to use as filename
+    text_hash = hashlib.md5(text.encode()).hexdigest()
+    speed = "slow" if slow else "normal"
+    return f"{text_hash}_{speed}.mp3"
+
+def get_cached_audio(text, slow=False):
+    """Check if audio is already cached"""
+    filename = get_cache_filename(text, slow)
+    filepath = os.path.join(CACHE_DIR, filename)
+    if os.path.exists(filepath):
+        return "/" + filepath
+    return None
+
+def save_to_cache(text, filepath, slow=False):
+    """Save audio to cache"""
+    filename = get_cache_filename(text, slow)
+    cache_path = os.path.join(CACHE_DIR, filename)
+    
+    # Copy the file to cache
+    try:
+        import shutil
+        shutil.copy(filepath, cache_path)
+    except:
+        pass
 
 # ================= FEATURE UNLOCK SYSTEM =================
 FEATURE_UNLOCKS = {
@@ -151,13 +185,55 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# ================= TTS =================
-def speak_to_file(text, slow=False):
+# ================= IMPROVED TTS WITH CACHING AND RETRY =================
+def speak_to_file(text, slow=False, max_retries=3):
+    """
+    Convert text to speech with caching and retry logic
+    - Checks cache first to avoid repeated API calls
+    - Implements retry with exponential backoff
+    - Adds delays between requests to avoid rate limits
+    """
+    # Check cache first
+    cached_audio = get_cached_audio(text, slow)
+    if cached_audio:
+        print(f"Using cached audio for: {text[:50]}...")
+        return cached_audio
+    
+    # Create audio directory
     os.makedirs("static/audio", exist_ok=True)
     filename = f"{uuid.uuid4()}.mp3"
     path = f"static/audio/{filename}"
-    gTTS(text=text, lang="en", slow=slow).save(path)
-    return "/" + path
+    
+    # Try to generate with retries
+    for attempt in range(max_retries):
+        try:
+            # Add a small delay before each attempt to avoid hitting rate limits
+            if attempt > 0:
+                delay = (2 ** attempt) + random.uniform(0, 1)  # Exponential backoff
+                print(f"Retry attempt {attempt + 1} after {delay:.2f}s delay...")
+                time.sleep(delay)
+            else:
+                # Even on first attempt, add small random delay
+                time.sleep(random.uniform(0.3, 0.8))
+            
+            # Generate TTS
+            gTTS(text=text, lang="en", slow=slow).save(path)
+            
+            # Save to cache for future use
+            save_to_cache(text, path, slow)
+            
+            print(f"Successfully generated audio for: {text[:50]}...")
+            return "/" + path
+            
+        except Exception as e:
+            print(f"TTS attempt {attempt + 1} failed: {str(e)}")
+            
+            if attempt == max_retries - 1:
+                # Last attempt failed - return None to indicate failure
+                print(f"All {max_retries} attempts failed for TTS")
+                return None
+    
+    return None
 
 # ================= AI FUNCTIONS =================
 def english_coach(child_text):
@@ -662,21 +738,44 @@ def process():
     data = request.json
     user_text = data["text"]
     roleplay = data.get("roleplay")
-    if roleplay:
-        ai_reply = roleplay_coach(user_text, roleplay)
-    else:
-        ai_reply = english_coach(user_text)
-    correct = praise = question = ""
-    for line in ai_reply.split("\n"):
-        if line.startswith("CORRECT:"):
-            correct = line.replace("CORRECT:", "").strip()
-        elif line.startswith("PRAISE:"):
-            praise = line.replace("PRAISE:", "").strip()
-        elif line.startswith("QUESTION:"):
-            question = line.replace("QUESTION:", "").strip()
-    final_text = f"{correct}. {praise} {question}"
-    audio = speak_to_file(final_text)
-    return jsonify({"reply": final_text, "audio": audio})
+    
+    try:
+        if roleplay:
+            ai_reply = roleplay_coach(user_text, roleplay)
+        else:
+            ai_reply = english_coach(user_text)
+        
+        correct = praise = question = ""
+        for line in ai_reply.split("\n"):
+            if line.startswith("CORRECT:"):
+                correct = line.replace("CORRECT:", "").strip()
+            elif line.startswith("PRAISE:"):
+                praise = line.replace("PRAISE:", "").strip()
+            elif line.startswith("QUESTION:"):
+                question = line.replace("QUESTION:", "").strip()
+        
+        final_text = f"{correct}. {praise} {question}"
+        
+        # Try to generate audio with improved TTS
+        audio = speak_to_file(final_text)
+        
+        # If audio generation failed, still return the text
+        if audio is None:
+            return jsonify({
+                "reply": final_text, 
+                "audio": None,
+                "audio_error": "Audio temporarily unavailable. Please try again."
+            })
+        
+        return jsonify({"reply": final_text, "audio": audio})
+        
+    except Exception as e:
+        print(f"Error in process: {e}")
+        return jsonify({
+            "reply": "Sorry, something went wrong. Please try again.",
+            "audio": None,
+            "error": str(e)
+        }), 500
 
 @app.route("/repeat_sentence", methods=["POST"])
 @student_required
@@ -685,8 +784,20 @@ def repeat_sentence():
     category = data.get("category", "general")
     difficulty = data.get("difficulty", "easy")
     sentence = generate_repeat_sentence(category, difficulty)
+    
+    # Try to generate audio
     audio_normal = speak_to_file(sentence, slow=False)
     audio_slow = speak_to_file(sentence, slow=True)
+    
+    # If audio failed, return sentence without audio
+    if audio_normal is None or audio_slow is None:
+        return jsonify({
+            "sentence": sentence, 
+            "audio": None, 
+            "audio_slow": None,
+            "audio_error": "Audio temporarily unavailable. Please read the sentence."
+        })
+    
     return jsonify({"sentence": sentence, "audio": audio_normal, "audio_slow": audio_slow})
 
 @app.route("/check_repeat", methods=["POST"])
@@ -725,8 +836,21 @@ def spell_word():
     difficulty = data.get("difficulty", "easy")
     word = generate_spell_word(difficulty)
     usage = get_word_sentence_usage(word)
+    
+    # Try to generate audio
     audio_word = speak_to_file(word, slow=True)
     audio_sentence = speak_to_file(usage, slow=False)
+    
+    # If audio failed, return word without audio
+    if audio_word is None or audio_sentence is None:
+        return jsonify({
+            "word": word, 
+            "usage": usage, 
+            "audio_word": None, 
+            "audio_sentence": None,
+            "audio_error": "Audio temporarily unavailable. Please read the word."
+        })
+    
     return jsonify({"word": word, "usage": usage, "audio_word": audio_word, "audio_sentence": audio_sentence})
 
 @app.route("/check_spelling", methods=["POST"])
@@ -779,8 +903,24 @@ def get_meaning():
             word_type = line.replace("TYPE:", "").strip()
         elif line.startswith("TIP:"):
             tip = line.replace("TIP:", "").strip()
+    
     audio_text = f"{word}. {meaning}. For example: {usage}. {tip}"
+    
+    # Try to generate audio
     audio = speak_to_file(audio_text, slow=False)
+    
+    # If audio failed, return meaning without audio
+    if audio is None:
+        return jsonify({
+            "word": word, 
+            "meaning": meaning, 
+            "usage": usage, 
+            "type": word_type, 
+            "tip": tip, 
+            "audio": None,
+            "audio_error": "Audio temporarily unavailable."
+        })
+    
     return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
 
 # ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS =================
@@ -1012,4 +1152,3 @@ import os
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-
