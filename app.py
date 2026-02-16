@@ -26,13 +26,13 @@ recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
 
-# ================= FEATURE UNLOCK SYSTEM - CHANGED TO 50 XP =================
+# ================= FEATURE UNLOCK SYSTEM =================
 FEATURE_UNLOCKS = {
     1: ["conversation"],  # Level 1: Conversation mode unlocked
-    2: ["roleplay"],      # Level 2: Roleplay mode unlocked (50 XP)
-    3: ["repeat"],        # Level 3: Repeat mode unlocked (100 XP)
-    4: ["spellbee"],      # Level 4: Spell Bee mode unlocked (150 XP)
-    5: ["meanings"]       # Level 5: Word Meanings mode unlocked (200 XP)
+    2: ["roleplay"],      # Level 2: Roleplay mode unlocked
+    3: ["repeat"],        # Level 3: Repeat mode unlocked
+    4: ["spellbee"],      # Level 4: Spell Bee mode unlocked
+    5: ["meanings"]       # Level 5: Word Meanings mode unlocked
 }
 
 def get_unlocked_features(level):
@@ -50,7 +50,7 @@ def get_next_unlock(level):
         return {
             'level': next_level,
             'features': FEATURE_UNLOCKS[next_level],
-            'xp_needed': (next_level - 1) * 50 - session.get('current_xp', 0)  # Changed to 50
+            'xp_needed': (next_level - 1) * 100 - session.get('current_xp', 0)
         }
     return None
 
@@ -388,7 +388,6 @@ def generate_repeat_sentence(category="general", difficulty="easy"):
     
     return selected_sentence
 
-
 def generate_spell_word(difficulty="easy"):
     """Generate a word for spelling without repetition"""
     global recent_words
@@ -438,7 +437,6 @@ def generate_spell_word(difficulty="easy"):
     
     return selected_word
 
-
 def get_word_sentence_usage(word):
     """Generate a sentence using the word"""
     prompt = f"""Create ONE simple sentence using the word "{word}" for children aged 6-15.
@@ -464,7 +462,6 @@ Return ONLY the sentence, nothing else."""
     except:
         return f"The {word} is very nice."
 
-
 def get_word_meaning(word):
     """Get meaning, usage, and tips for a word"""
     prompt = f"""Explain the word "{word}" to a child aged 6-15.
@@ -489,7 +486,6 @@ Keep everything very simple and child-friendly."""
     except:
         return f"MEANING: {word} is a word\nEXAMPLE: I know the word {word}\nTYPE: word\nTIP: Practice saying it"
 
-
 def compare_words(student_text, correct_text):
     """Compare student's spoken words with correct sentence"""
     student_words = student_text.lower().split()
@@ -506,7 +502,6 @@ def compare_words(student_text, correct_text):
         else:
             comparison.append({"word": correct_word, "status": "missing"})
     return comparison
-
 
 def compare_spelling(student_spelling, correct_word):
     """Compare student's spelling with correct word letter by letter"""
@@ -648,71 +643,6 @@ def logout():
     session.clear()
     return redirect(url_for('login_page'))
 
-# ================= NEW: DELETE ACCOUNT ROUTE =================
-@app.route("/delete_account", methods=["POST"])
-@login_required
-def delete_account():
-    """Permanently delete user account and all associated data"""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'message': 'Not logged in'})
-    
-    user_id = session['user_id']
-    role = session.get('role')
-    
-    conn = get_db_connection()
-    
-    try:
-        if role == 'student':
-            roll_no = session.get('roll_no')
-            
-            # Delete all student data in order (to avoid foreign key issues)
-            # 1. Delete activity log
-            conn.execute('DELETE FROM activity_log WHERE roll_no = ?', (roll_no,))
-            
-            # 2. Delete student progress
-            conn.execute('DELETE FROM student_progress WHERE roll_no = ?', (roll_no,))
-            
-            # 3. Delete student sessions
-            conn.execute('DELETE FROM student_sessions WHERE student_id = ?', (user_id,))
-            
-            # 4. Delete user account
-            conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
-            
-            conn.commit()
-            conn.close()
-            
-            # Clear session
-            session.clear()
-            
-            return jsonify({
-                'success': True, 
-                'message': 'Your account has been permanently deleted. We hope to see you again!'
-            })
-        
-        elif role == 'teacher':
-            # Delete teacher account
-            conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
-            
-            conn.commit()
-            conn.close()
-            
-            # Clear session
-            session.clear()
-            
-            return jsonify({
-                'success': True, 
-                'message': 'Your account has been permanently deleted.'
-            })
-        
-        else:
-            conn.close()
-            return jsonify({'success': False, 'message': 'Invalid role'})
-            
-    except Exception as e:
-        conn.close()
-        print(f"Delete account error: {e}")
-        return jsonify({'success': False, 'message': 'Error deleting account'})
-
 # ================= STUDENT ROUTES =================
 @app.route("/dashboard")
 @student_required
@@ -853,7 +783,7 @@ def get_meaning():
     audio = speak_to_file(audio_text, slow=False)
     return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
 
-# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS - CHANGED TO 50 XP =================
+# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS =================
 @app.route("/get_student_info")
 @student_required
 def get_student_info():
@@ -869,7 +799,7 @@ def get_student_info():
     conn.close()
     
     if student and progress:
-        current_level = (progress['xp'] // 50) + 1  # Changed to 50
+        current_level = (progress['xp'] // 100) + 1
         unlocked_features = get_unlocked_features(current_level)
         next_unlock = get_next_unlock(current_level)
         
@@ -910,8 +840,8 @@ def update_xp():
     if progress:
         old_xp = progress['xp']
         new_xp = old_xp + xp_earned
-        old_level = old_xp // 50 + 1  # Changed to 50
-        new_level = new_xp // 50 + 1  # Changed to 50
+        old_level = old_xp // 100 + 1
+        new_level = new_xp // 100 + 1
         leveled_up = new_level > old_level
         
         # Check for new feature unlocks
@@ -1013,7 +943,7 @@ def get_all_students():
             'name': student['name'],
             'rollNo': student['roll_no'],
             'xp': student['xp'] or 0,
-            'level': ((student['xp'] or 0) // 50) + 1,  # Changed to 50
+            'level': ((student['xp'] or 0) // 100) + 1,
             'totalStars': student['total_stars'] or 0,
             'totalSessions': student['total_sessions'] or 0,
             'averageAccuracy': round(student['average_accuracy'] or 0, 1),
@@ -1060,7 +990,7 @@ def get_student_details(roll_no):
             'starsEarned': activity['stars_earned']
         })
     
-    current_level = ((student['xp'] or 0) // 50) + 1  # Changed to 50
+    current_level = ((student['xp'] or 0) // 100) + 1
     unlocked_features = get_unlocked_features(current_level)
     
     student_data = {
@@ -1082,3 +1012,4 @@ import os
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+
