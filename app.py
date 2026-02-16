@@ -26,6 +26,34 @@ recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
 
+# ================= FEATURE UNLOCK SYSTEM - CHANGED TO 50 XP =================
+FEATURE_UNLOCKS = {
+    1: ["conversation"],  # Level 1: Conversation mode unlocked
+    2: ["roleplay"],      # Level 2: Roleplay mode unlocked (50 XP)
+    3: ["repeat"],        # Level 3: Repeat mode unlocked (100 XP)
+    4: ["spellbee"],      # Level 4: Spell Bee mode unlocked (150 XP)
+    5: ["meanings"]       # Level 5: Word Meanings mode unlocked (200 XP)
+}
+
+def get_unlocked_features(level):
+    """Get all features unlocked up to the current level"""
+    unlocked = []
+    for lvl in range(1, level + 1):
+        if lvl in FEATURE_UNLOCKS:
+            unlocked.extend(FEATURE_UNLOCKS[lvl])
+    return unlocked
+
+def get_next_unlock(level):
+    """Get the next feature that will be unlocked"""
+    next_level = level + 1
+    if next_level in FEATURE_UNLOCKS:
+        return {
+            'level': next_level,
+            'features': FEATURE_UNLOCKS[next_level],
+            'xp_needed': (next_level - 1) * 50 - session.get('current_xp', 0)  # Changed to 50
+        }
+    return None
+
 # ================= DATABASE SETUP =================
 def init_db():
     """Initialize the SQLite database"""
@@ -546,7 +574,7 @@ def login():
         
         if role == "student":
             session['roll_no'] = user['roll_no']
-            session['student_name'] = user['name']  # Store as student_name for dashboard template
+            session['student_name'] = user['name']
             conn = get_db_connection()
             conn.execute('INSERT INTO student_sessions (student_id) VALUES (?)', (user['id'],))
             conn.commit()
@@ -620,6 +648,71 @@ def logout():
     session.clear()
     return redirect(url_for('login_page'))
 
+# ================= NEW: DELETE ACCOUNT ROUTE =================
+@app.route("/delete_account", methods=["POST"])
+@login_required
+def delete_account():
+    """Permanently delete user account and all associated data"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+    
+    user_id = session['user_id']
+    role = session.get('role')
+    
+    conn = get_db_connection()
+    
+    try:
+        if role == 'student':
+            roll_no = session.get('roll_no')
+            
+            # Delete all student data in order (to avoid foreign key issues)
+            # 1. Delete activity log
+            conn.execute('DELETE FROM activity_log WHERE roll_no = ?', (roll_no,))
+            
+            # 2. Delete student progress
+            conn.execute('DELETE FROM student_progress WHERE roll_no = ?', (roll_no,))
+            
+            # 3. Delete student sessions
+            conn.execute('DELETE FROM student_sessions WHERE student_id = ?', (user_id,))
+            
+            # 4. Delete user account
+            conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            
+            conn.commit()
+            conn.close()
+            
+            # Clear session
+            session.clear()
+            
+            return jsonify({
+                'success': True, 
+                'message': 'Your account has been permanently deleted. We hope to see you again!'
+            })
+        
+        elif role == 'teacher':
+            # Delete teacher account
+            conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            
+            conn.commit()
+            conn.close()
+            
+            # Clear session
+            session.clear()
+            
+            return jsonify({
+                'success': True, 
+                'message': 'Your account has been permanently deleted.'
+            })
+        
+        else:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid role'})
+            
+    except Exception as e:
+        conn.close()
+        print(f"Delete account error: {e}")
+        return jsonify({'success': False, 'message': 'Error deleting account'})
+
 # ================= STUDENT ROUTES =================
 @app.route("/dashboard")
 @student_required
@@ -688,7 +781,6 @@ def check_repeat():
         feedback = "Keep trying! Speak slowly and clearly."
         stars = 0
     
-    # Return score and stars but DO NOT update XP yet
     return jsonify({
         "feedback": feedback, 
         "score": round(score * 100), 
@@ -733,7 +825,6 @@ def check_spelling():
             feedback = "Try again! Listen carefully to the word."
             stars = 0
     
-    # Return score but DO NOT update XP yet
     return jsonify({
         "correct": is_correct, 
         "feedback": feedback, 
@@ -762,11 +853,11 @@ def get_meaning():
     audio = speak_to_file(audio_text, slow=False)
     return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
 
-# ================= XP SYSTEM ROUTES (MODIFIED) =================
+# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS - CHANGED TO 50 XP =================
 @app.route("/get_student_info")
 @student_required
 def get_student_info():
-    """Get student XP and progress info"""
+    """Get student XP and progress info with unlocked features"""
     if 'roll_no' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'})
     
@@ -778,6 +869,10 @@ def get_student_info():
     conn.close()
     
     if student and progress:
+        current_level = (progress['xp'] // 50) + 1  # Changed to 50
+        unlocked_features = get_unlocked_features(current_level)
+        next_unlock = get_next_unlock(current_level)
+        
         return jsonify({
             'success': True,
             'student': {
@@ -786,7 +881,10 @@ def get_student_info():
                 'xp': progress['xp'],
                 'totalStars': progress['total_stars'],
                 'totalSessions': progress['total_sessions'],
-                'averageAccuracy': round(progress['average_accuracy'], 1)
+                'averageAccuracy': round(progress['average_accuracy'], 1),
+                'level': current_level,
+                'unlockedFeatures': unlocked_features,
+                'nextUnlock': next_unlock
             }
         })
     else:
@@ -795,10 +893,7 @@ def get_student_info():
 @app.route("/update_xp", methods=["POST"])
 @student_required
 def update_xp():
-    """
-    Update student XP after COMPLETING A FULL STAGE (5 questions)
-    This should be called from the frontend ONLY when all 5 questions are done
-    """
+    """Update student XP and check for feature unlocks"""
     if 'roll_no' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'})
     
@@ -806,8 +901,8 @@ def update_xp():
     roll_no = session['roll_no']
     xp_earned = data.get('xpEarned', 0)
     mode = data.get('mode', '')
-    score = data.get('score', 0)  # This should be the average score of all 5 questions
-    stars_earned = data.get('starsEarned', 0)  # Total stars from all 5 questions
+    score = data.get('score', 0)
+    stars_earned = data.get('starsEarned', 0)
     
     conn = get_db_connection()
     progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
@@ -815,15 +910,21 @@ def update_xp():
     if progress:
         old_xp = progress['xp']
         new_xp = old_xp + xp_earned
-        old_level = old_xp // 100 + 1
-        new_level = new_xp // 100 + 1
+        old_level = old_xp // 50 + 1  # Changed to 50
+        new_level = new_xp // 50 + 1  # Changed to 50
         leveled_up = new_level > old_level
+        
+        # Check for new feature unlocks
+        newly_unlocked_features = []
+        if leveled_up:
+            for level in range(old_level + 1, new_level + 1):
+                if level in FEATURE_UNLOCKS:
+                    newly_unlocked_features.extend(FEATURE_UNLOCKS[level])
         
         # Calculate new average accuracy
         old_avg = progress['average_accuracy']
         total_sessions = progress['total_sessions']
         
-        # Update average accuracy (weighted average)
         if total_sessions == 0:
             new_avg = score
         else:
@@ -849,11 +950,18 @@ def update_xp():
         conn.commit()
         conn.close()
         
+        # Get all unlocked features and next unlock info
+        unlocked_features = get_unlocked_features(new_level)
+        next_unlock = get_next_unlock(new_level)
+        
         return jsonify({
             'success': True, 
             'newXP': new_xp, 
             'newLevel': new_level, 
             'leveledUp': leveled_up,
+            'newlyUnlockedFeatures': newly_unlocked_features,
+            'unlockedFeatures': unlocked_features,
+            'nextUnlock': next_unlock,
             'averageAccuracy': round(new_avg, 1)
         })
     else:
@@ -905,6 +1013,7 @@ def get_all_students():
             'name': student['name'],
             'rollNo': student['roll_no'],
             'xp': student['xp'] or 0,
+            'level': ((student['xp'] or 0) // 50) + 1,  # Changed to 50
             'totalStars': student['total_stars'] or 0,
             'totalSessions': student['total_sessions'] or 0,
             'averageAccuracy': round(student['average_accuracy'] or 0, 1),
@@ -919,7 +1028,6 @@ def get_student_details(roll_no):
     """Get detailed information for a specific student"""
     conn = get_db_connection()
     
-    # Get student basic info and progress
     student = conn.execute('''
         SELECT u.name, u.roll_no, sp.xp, sp.total_stars, 
                sp.total_sessions, sp.average_accuracy, sp.last_active
@@ -932,7 +1040,6 @@ def get_student_details(roll_no):
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
     
-    # Get activity log
     activities = conn.execute('''
         SELECT date, mode, score, xp_earned, stars_earned
         FROM activity_log
@@ -953,14 +1060,19 @@ def get_student_details(roll_no):
             'starsEarned': activity['stars_earned']
         })
     
+    current_level = ((student['xp'] or 0) // 50) + 1  # Changed to 50
+    unlocked_features = get_unlocked_features(current_level)
+    
     student_data = {
         'name': student['name'],
         'rollNo': student['roll_no'],
         'xp': student['xp'] or 0,
+        'level': current_level,
         'totalStars': student['total_stars'] or 0,
         'totalSessions': student['total_sessions'] or 0,
         'averageAccuracy': round(student['average_accuracy'] or 0, 1),
         'lastActive': student['last_active'],
+        'unlockedFeatures': unlocked_features,
         'activityLog': activity_list
     }
     
@@ -968,6 +1080,5 @@ def get_student_details(roll_no):
 
 import os
 
-# ================= RUN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

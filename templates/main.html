@@ -114,16 +114,17 @@
             z-index: 10;
         }
 
-        /* ========== XP SYSTEM STYLES ========== */
+        /* ========== XP SYSTEM STYLES - UPDATED TO LIGHT YELLOW ========== */
         .xp-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe680 100%);
             padding: 20px 30px;
             border-radius: 20px;
             margin-bottom: 30px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            color: #2d3436;
+            box-shadow: 0 10px 30px rgba(255, 230, 128, 0.4);
             position: relative;
             overflow: hidden;
+            border: 3px solid #ffd700;
         }
 
         .xp-header::before {
@@ -146,9 +147,14 @@
         }
 
         .student-name {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 900;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(255, 215, 0, 0.3);
+            color: #2d3436;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .level-display {
@@ -159,21 +165,23 @@
         }
 
         .level-badge {
-            background: white;
-            color: #667eea;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
             padding: 8px 20px;
             border-radius: 25px;
             font-weight: 900;
             font-size: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
         }
 
         .xp-amount {
             font-size: 20px;
             font-weight: 700;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(243, 156, 18, 0.2);
+            color: #2d3436;
             padding: 5px 15px;
             border-radius: 20px;
+            border: 2px solid #f39c12;
         }
 
         .xp-progress-container {
@@ -183,12 +191,12 @@
         .xp-progress-bar {
             width: 100%;
             height: 35px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(243, 156, 18, 0.2);
             border-radius: 17px;
             overflow: hidden;
             margin-bottom: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            border: 2px solid #f39c12;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .xp-progress-fill {
@@ -216,6 +224,7 @@
             font-size: 14px;
             opacity: 0.9;
             font-weight: 600;
+            color: #2d3436;
         }
 
         /* XP Gain Popup */
@@ -266,6 +275,57 @@
             0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); }
             100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
+        }
+
+        /* Next Unlock Info Banner */
+        #nextUnlockInfo {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 15px 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2d3436;
+            box-shadow: 0 5px 15px rgba(253, 203, 110, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Locked Mode Styles */
+        .mode-btn.locked {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%) !important;
+            color: #ecf0f1 !important;
+            position: relative;
+        }
+
+        .mode-btn.locked::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.1),
+                rgba(0,0,0,0.1) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .mode-btn.locked:hover {
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* Mascot Character */
@@ -392,17 +452,6 @@
             animation: slideIn 0.4s ease-out;
             position: relative;
             max-width: 80%;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .user-msg {
@@ -1165,7 +1214,7 @@
             }
             
             .student-name {
-                font-size: 20px;
+                font-size: 22px;
             }
             
             .level-display {
@@ -1278,7 +1327,7 @@
         <!-- XP Header - Student Progress Display -->
         <div class="xp-header">
             <div class="xp-info">
-                <div class="student-name" id="studentName">Loading...</div>
+                <div class="student-name" id="studentName">👤 Loading...</div>
                 <div class="level-display">
                     <span class="level-badge" id="levelBadge">Level 1</span>
                     <span class="xp-amount" id="xpAmount">0 XP</span>
@@ -1287,12 +1336,15 @@
             <div class="xp-progress-container">
                 <div class="xp-progress-bar">
                     <div class="xp-progress-fill" id="xpProgressFill" style="width: 0%;">
-                        <span id="xpProgressText">0/100</span>
+                        <span id="xpProgressText">0/50</span>
                     </div>
                 </div>
-                <div class="xp-next-level" id="xpNextLevel">100 XP to Level 2</div>
+                <div class="xp-next-level" id="xpNextLevel">50 XP to Level 2</div>
             </div>
         </div>
+
+        <!-- Next Unlock Info Banner -->
+        <div id="nextUnlockInfo" style="display: none;"></div>
 
         <!-- Mascot -->
         <div class="mascot" title="Hi! I'm your English coach!">🦉</div>
@@ -1302,19 +1354,19 @@
 
         <!-- Mode Selection -->
         <div class="mode-selector">
-            <button class="mode-btn active" onclick="switchMode('conversation')">
+            <button class="mode-btn active" data-mode="conversation" onclick="switchMode('conversation')">
                 💬 Conversation
             </button>
-            <button class="mode-btn" onclick="switchMode('roleplay')">
+            <button class="mode-btn" data-mode="roleplay" onclick="switchMode('roleplay')">
                 🎭 Roleplay
             </button>
-            <button class="mode-btn" onclick="switchMode('repeat')">
+            <button class="mode-btn" data-mode="repeat" onclick="switchMode('repeat')">
                 🔁 Repeat
             </button>
-            <button class="mode-btn" onclick="switchMode('spellbee')">
+            <button class="mode-btn" data-mode="spellbee" onclick="switchMode('spellbee')">
                 🐝 Spell Bee
             </button>
-            <button class="mode-btn" onclick="switchMode('meanings')">
+            <button class="mode-btn" data-mode="meanings" onclick="switchMode('meanings')">
                 📖 Word Meanings
             </button>
         </div>
@@ -1612,11 +1664,88 @@
         let currentWordAudio = '';
         let currentUsageAudio = '';
 
-        // ========== XP SYSTEM VARIABLES ==========
+        // ========== XP SYSTEM VARIABLES - CHANGED TO 50 XP ==========
         let studentXP = 0;
         let studentLevel = 1;
         let studentName = 'Student';
         let studentRollNo = '';
+
+        // ========== FEATURE UNLOCK SYSTEM ==========
+        let unlockedFeatures = ['conversation'];  // Default unlock
+        
+        const FEATURE_UNLOCKS = {
+            1: ['conversation'],
+            2: ['roleplay'],
+            3: ['repeat'],
+            4: ['spellbee'],
+            5: ['meanings']
+        };
+
+        // Check if a feature is unlocked
+        function isFeatureUnlocked(feature) {
+            return unlockedFeatures.includes(feature);
+        }
+
+        // Get feature display name
+        function getFeatureDisplayName(feature) {
+            const names = {
+                'conversation': 'Conversation Mode',
+                'roleplay': 'Roleplay Mode',
+                'repeat': 'Repeat Mode',
+                'spellbee': 'Spell Bee Mode',
+                'meanings': 'Word Meanings Mode'
+            };
+            return names[feature] || feature;
+        }
+
+        // Get required level for feature
+        function getRequiredLevel(feature) {
+            for (let level in FEATURE_UNLOCKS) {
+                if (FEATURE_UNLOCKS[level].includes(feature)) {
+                    return parseInt(level);
+                }
+            }
+            return 1;
+        }
+
+        // Update UI based on unlocked features
+        function updateFeatureUI() {
+            const modeBtns = document.querySelectorAll('.mode-btn');
+            
+            modeBtns.forEach(btn => {
+                const mode = btn.getAttribute('data-mode');
+                
+                if (isFeatureUnlocked(mode)) {
+                    btn.disabled = false;
+                    btn.classList.remove('locked');
+                    // Remove lock icon if present
+                    const text = btn.textContent.replace('🔒 ', '');
+                    btn.innerHTML = text;
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('locked');
+                    // Add lock icon if not present
+                    if (!btn.textContent.includes('🔒')) {
+                        btn.innerHTML = '🔒 ' + btn.textContent;
+                    }
+                }
+            });
+        }
+
+        // Show next unlock info
+        function showNextUnlockInfo(nextUnlock) {
+            const nextUnlockDiv = document.getElementById('nextUnlockInfo');
+            if (nextUnlockDiv && nextUnlock) {
+                const featureName = getFeatureDisplayName(nextUnlock.features[0]);
+                nextUnlockDiv.innerHTML = `
+                    🔓 Next Unlock: <strong>${featureName}</strong> at Level ${nextUnlock.level}
+                    <span style="margin-left: 10px; color: #e17055;">(${nextUnlock.xp_needed} XP needed)</span>
+                `;
+                nextUnlockDiv.style.display = 'block';
+            } else {
+                nextUnlockDiv.style.display = 'none';
+            }
+        }
 
         // ========== LOAD STUDENT INFO ON PAGE LOAD ==========
         window.addEventListener('DOMContentLoaded', function() {
@@ -1629,7 +1758,7 @@
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
 
-        // ========== XP SYSTEM FUNCTIONS ==========
+        // ========== XP SYSTEM FUNCTIONS - CHANGED TO 50 XP ==========
         async function loadStudentInfo() {
             try {
                 const response = await fetch('/get_student_info');
@@ -1637,35 +1766,43 @@
                 
                 if (data.success) {
                     studentXP = data.student.xp || 0;
-                    studentLevel = calculateLevel(studentXP);
+                    studentLevel = data.student.level || calculateLevel(studentXP);
                     studentName = data.student.name || 'Student';
                     studentRollNo = data.student.rollNo || '';
+                    unlockedFeatures = data.student.unlockedFeatures || ['conversation'];
                     
                     updateXPDisplay();
+                    updateFeatureUI();  // Update locked/unlocked modes
+                    
+                    // Show next unlock notification
+                    if (data.student.nextUnlock) {
+                        showNextUnlockInfo(data.student.nextUnlock);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading student info:', error);
                 studentXP = 0;
                 studentLevel = 1;
+                unlockedFeatures = ['conversation'];
                 updateXPDisplay();
+                updateFeatureUI();
             }
         }
 
         function calculateLevel(xp) {
-            return Math.floor(xp / 100) + 1;
+            return Math.floor(xp / 50) + 1;  // Changed to 50
         }
 
         function xpToNextLevel(currentXP) {
             const currentLevel = calculateLevel(currentXP);
-            const nextLevelXP = currentLevel * 100;
+            const nextLevelXP = currentLevel * 50;  // Changed to 50
             return nextLevelXP - currentXP;
         }
 
         function updateXPDisplay() {
             const nameElement = document.getElementById('studentName');
             if (nameElement) {
-                // Apply capitalization to first letter only
-                nameElement.textContent = capitalizeFirstLetter(studentName);
+                nameElement.textContent = '👤 ' + capitalizeFirstLetter(studentName);
             }
             
             const levelBadge = document.getElementById('levelBadge');
@@ -1678,8 +1815,8 @@
                 xpAmount.textContent = `${studentXP} XP`;
             }
             
-            const xpForCurrentLevel = (studentLevel - 1) * 100;
-            const xpForNext = studentLevel * 100;
+            const xpForCurrentLevel = (studentLevel - 1) * 50;  // Changed to 50
+            const xpForNext = studentLevel * 50;  // Changed to 50
             const xpInCurrentLevel = studentXP - xpForCurrentLevel;
             const xpNeeded = xpForNext - xpForCurrentLevel;
             
@@ -1722,13 +1859,20 @@
                     const oldLevel = studentLevel;
                     studentXP = data.newXP;
                     studentLevel = data.newLevel;
+                    unlockedFeatures = data.unlockedFeatures || unlockedFeatures;
                     
                     updateXPDisplay();
+                    updateFeatureUI();  // Update locked/unlocked modes
                     
                     if (data.leveledUp && data.newLevel > oldLevel) {
                         setTimeout(() => {
-                            showLevelUpAnimation(data.newLevel);
+                            showLevelUpAnimation(data.newLevel, data.newlyUnlockedFeatures || []);
                         }, 500);
+                    }
+                    
+                    // Update next unlock info
+                    if (data.nextUnlock) {
+                        showNextUnlockInfo(data.nextUnlock);
                     }
                 }
             } catch (error) {
@@ -1747,21 +1891,30 @@
             }, 3000);
         }
 
-        function showLevelUpAnimation(newLevel) {
+        function showLevelUpAnimation(newLevel, newlyUnlockedFeatures) {
             createConfetti();
             
             const notification = document.createElement('div');
             notification.className = 'level-up-notification';
+            
+            let featureText = '';
+            if (newlyUnlockedFeatures && newlyUnlockedFeatures.length > 0) {
+                const featureName = getFeatureDisplayName(newlyUnlockedFeatures[0]);
+                featureText = `<div style="font-size: 24px; margin-top: 20px; animation: slideIn 0.5s ease-out 0.5s both;">🎉 New Feature Unlocked:<br/><strong>${featureName}</strong> 🎉</div>`;
+            }
+            
             notification.innerHTML = `
                 <div>🎉 LEVEL UP! 🎉</div>
                 <div style="font-size: 72px; margin: 20px 0;">⭐</div>
                 <div style="font-size: 36px;">Level ${newLevel}</div>
+                ${featureText}
             `;
             document.body.appendChild(notification);
             
             setTimeout(() => {
                 notification.remove();
-            }, 3000);
+                updateFeatureUI();  // Make sure UI is updated after animation
+            }, 4000);
         }
 
         // Exit to home function
@@ -1833,6 +1986,14 @@
 
         // Switch between modes
         function switchMode(mode) {
+            // Check if mode is unlocked
+            if (!isFeatureUnlocked(mode)) {
+                const requiredLevel = getRequiredLevel(mode);
+                const featureName = getFeatureDisplayName(mode);
+                alert(`🔒 ${featureName} is locked!\n\nReach Level ${requiredLevel} to unlock it.\nYou are currently at Level ${studentLevel}.`);
+                return;
+            }
+            
             stopAllMicAndAudio();
             currentMode = mode;
             
@@ -1931,7 +2092,6 @@
                 
                 audio.onended = function() {
                     currentAudioPlaying = null;
-                    // Award XP for conversation
                     awardXP(5, 'conversation', 100, 1);
                     
                     if (autoReactivate && currentMode === 'conversation') {
@@ -2009,7 +2169,6 @@
                 
                 audio.onended = function() {
                     currentAudioPlaying = null;
-                    // Award XP for roleplay
                     awardXP(8, 'roleplay', 100, 1);
                     
                     if (autoReactivate && currentMode === 'roleplay') {
@@ -2189,7 +2348,6 @@
                 updateAccuracy();
                 updateBadges();
                 
-                // Award XP only after all 5 stages
                 if (currentStage >= totalStages) {
                     const averageScore = stageScores.reduce((a, b) => a + b, 0) / stageScores.length;
                     const totalXPEarned = Math.floor(averageScore / 2) * totalStages;
@@ -2446,7 +2604,6 @@
                 updateSpellAccuracy();
                 updateSpellBadges();
                 
-                // Award XP only after all 5 stages
                 if (currentSpellStage >= totalStages) {
                     const averageScore = spellStageScores.reduce((a, b) => a + b, 0) / spellStageScores.length;
                     const totalXPEarned = Math.floor(averageScore / 2) * totalStages;
@@ -2589,7 +2746,6 @@
                 audio.play();
                 audio.onended = function() {
                     currentAudioPlaying = null;
-                    // Award XP for learning word meaning
                     awardXP(10, 'meanings', 100, 1);
                 };
             })

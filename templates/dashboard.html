@@ -32,6 +32,7 @@
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: slideIn 0.5s ease-out;
+            position: relative;
         }
 
         @keyframes slideIn {
@@ -43,6 +44,37 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* Top Right Button (Sign Out) */
+        .signout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Comic Sans MS', cursive;
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .signout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
+            background: linear-gradient(135deg, #ff5252, #e91e63);
+        }
+
+        .signout-btn:active {
+            transform: translateY(0);
         }
 
         .header-section {
@@ -153,10 +185,131 @@
             box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 15px;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .modal-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .modal-btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+        }
+
+        .modal-btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(135deg, #ff5252, #e91e63);
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .dashboard-card {
                 padding: 25px;
+                padding-top: 60px;
             }
 
             .user-name {
@@ -170,6 +323,27 @@
             .btn {
                 width: 100%;
             }
+
+            .signout-btn {
+                top: 15px;
+                right: 15px;
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                max-width: calc(100% - 40px);
+                padding: 25px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -179,10 +353,18 @@
 
             .dashboard-card {
                 padding: 20px;
+                padding-top: 55px;
             }
 
             .user-name {
                 font-size: 32px;
+            }
+
+            .signout-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 11px;
             }
         }
     </style>
@@ -190,6 +372,11 @@
 <body>
     <div class="container">
         <div class="dashboard-card">
+            <!-- Sign Out Button (Top Right) -->
+            <button class="signout-btn" onclick="showSignOutModal()">
+                🗑️ Delete Account
+            </button>
+
             <!-- Header Section -->
             <div class="header-section">
                 <div class="welcome-text">🎉 Welcome Back! 🎉</div>
@@ -209,6 +396,35 @@
             <div class="buttons-section">
                 <a href="/main" class="btn btn-primary">🚀 Start Learning</a>
                 <button onclick="logout()" class="btn btn-secondary">🚪 Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Out (Delete Account) Confirmation Modal -->
+    <div class="modal" id="signOutModal">
+        <div class="modal-content">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title">Delete Account Permanently?</div>
+            <div class="modal-text">
+                This will permanently delete your account and all your data including:
+            </div>
+            <div class="modal-warning">
+                ❌ All your progress and XP<br>
+                ❌ All your activity history<br>
+                ❌ All your earned stars<br>
+                ❌ Your login credentials<br><br>
+                <strong>This action CANNOT be undone!</strong>
+            </div>
+            <div class="modal-text">
+                Are you absolutely sure?
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="hideSignOutModal()">
+                    No, Keep My Account
+                </button>
+                <button class="modal-btn modal-btn-danger" id="confirmDeleteBtn" onclick="confirmSignOut()">
+                    Yes, Delete Permanently
+                </button>
             </div>
         </div>
     </div>
@@ -253,11 +469,65 @@
         document.getElementById('quoteText').textContent = `"${randomQuote.text}"`;
         document.querySelector('.quote-author').textContent = `- ${randomQuote.author}`;
 
+        // Logout function (just logs out, doesn't delete data)
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 window.location.href = '/logout';
             }
         }
+
+        // Sign Out Modal functions (permanent deletion)
+        function showSignOutModal() {
+            document.getElementById('signOutModal').classList.add('active');
+        }
+
+        function hideSignOutModal() {
+            document.getElementById('signOutModal').classList.remove('active');
+        }
+
+        async function confirmSignOut() {
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+
+            try {
+                const response = await fetch('/delete_account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = '/login';
+                } else {
+                    alert('Error: ' + data.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Yes, Delete Permanently';
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Yes, Delete Permanently';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('signOutModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideSignOutModal();
+            }
+        });
+
+        // Keyboard support - ESC to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideSignOutModal();
+            }
+        });
         {% endraw %}
     </script>
 </body>
