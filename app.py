@@ -28,6 +28,133 @@ recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
 
+# ================= DIFFICULTY-BASED XP =================
+DIFFICULTY_XP = {
+    "easy": 1,
+    "medium": 2,
+    "hard": 5
+}
+
+# ================= BADGE DEFINITIONS =================
+ALL_BADGES = [
+    # XP Milestone Badges
+    {"id": "first_xp",       "name": "First Step",        "icon": "🌱", "description": "Earn your first XP",              "category": "milestone"},
+    {"id": "xp_25",          "name": "Getting Started",   "icon": "🔥", "description": "Earn 25 XP total",                "category": "milestone"},
+    {"id": "xp_50",          "name": "On a Roll",         "icon": "🚀", "description": "Earn 50 XP total",                "category": "milestone"},
+    {"id": "xp_100",         "name": "Century",           "icon": "💯", "description": "Earn 100 XP total",               "category": "milestone"},
+    {"id": "xp_250",         "name": "XP Warrior",        "icon": "⚔️",  "description": "Earn 250 XP total",               "category": "milestone"},
+    {"id": "xp_500",         "name": "XP Legend",         "icon": "👑",  "description": "Earn 500 XP total",               "category": "milestone"},
+
+    # Conversation Badges
+    {"id": "conv_10",        "name": "Chatterbox",        "icon": "💬", "description": "Earn 10 XP in Conversation",      "category": "conversation"},
+    {"id": "conv_50",        "name": "Conversationalist", "icon": "🗣️",  "description": "Earn 50 XP in Conversation",      "category": "conversation"},
+
+    # Roleplay Badges
+    {"id": "role_10",        "name": "Actor",             "icon": "🎭", "description": "Earn 10 XP in Roleplay",          "category": "roleplay"},
+    {"id": "role_50",        "name": "Stage Star",        "icon": "🌟", "description": "Earn 50 XP in Roleplay",          "category": "roleplay"},
+
+    # Repeat Badges
+    {"id": "repeat_easy",    "name": "Echo",              "icon": "🔁", "description": "Complete an Easy Repeat stage",   "category": "repeat"},
+    {"id": "repeat_medium",  "name": "Parrot",            "icon": "🦜", "description": "Complete a Medium Repeat stage",  "category": "repeat"},
+    {"id": "repeat_hard",    "name": "Mimic Master",      "icon": "🎙️",  "description": "Complete a Hard Repeat stage",    "category": "repeat"},
+    {"id": "repeat_50",      "name": "Repeat Champion",   "icon": "🏅", "description": "Earn 50 XP in Repeat",           "category": "repeat"},
+
+    # Spell Bee Badges
+    {"id": "spell_easy",     "name": "Speller",           "icon": "🐝", "description": "Complete an Easy Spell stage",   "category": "spellbee"},
+    {"id": "spell_medium",   "name": "Word Wizard",       "icon": "🧙", "description": "Complete a Medium Spell stage",  "category": "spellbee"},
+    {"id": "spell_hard",     "name": "Spelling Champion", "icon": "🏆", "description": "Complete a Hard Spell stage",    "category": "spellbee"},
+    {"id": "spell_50",       "name": "Spell Bee King",    "icon": "👑", "description": "Earn 50 XP in Spell Bee",        "category": "spellbee"},
+
+    # Meanings Badges
+    {"id": "meanings_1",     "name": "Curious Mind",      "icon": "🤔", "description": "Look up your first word",        "category": "meanings"},
+    {"id": "meanings_50",    "name": "Wordsmith",         "icon": "📖", "description": "Earn 50 XP in Word Meanings",    "category": "meanings"},
+
+    # Star Badges
+    {"id": "stars_5",        "name": "Star Collector",    "icon": "⭐", "description": "Earn 5 stars",                   "category": "stars"},
+    {"id": "stars_15",       "name": "Star Gazer",        "icon": "🌠", "description": "Earn 15 stars",                  "category": "stars"},
+    {"id": "stars_30",       "name": "Superstar",         "icon": "💫", "description": "Earn 30 stars",                  "category": "stars"},
+
+    # Perfect Score Badges
+    {"id": "perfect_repeat", "name": "Flawless Speaker",  "icon": "🎯", "description": "Score 100% in a Repeat session", "category": "perfect"},
+    {"id": "perfect_spell",  "name": "Perfect Speller",   "icon": "✨", "description": "Spell all words correctly",      "category": "perfect"},
+
+    # All-Rounder Badge
+    {"id": "all_modes",      "name": "All-Rounder",       "icon": "🌈", "description": "Earn XP in all 5 modes",         "category": "special"},
+]
+
+BADGE_MAP = {b["id"]: b for b in ALL_BADGES}
+
+def check_earned_badges(roll_no, progress_data, mode=None, difficulty=None, score=None, stars_earned=None):
+    """Determine which badges the student just earned."""
+    conn = get_db_connection()
+    existing = conn.execute(
+        'SELECT badge_id FROM student_badges WHERE roll_no = ?', (roll_no,)
+    ).fetchall()
+    conn.close()
+    already_earned = {row['badge_id'] for row in existing}
+
+    newly_earned = []
+
+    def award(badge_id):
+        if badge_id not in already_earned:
+            newly_earned.append(badge_id)
+            already_earned.add(badge_id)
+
+    total_xp   = progress_data.get('xp', 0)
+    conv_xp    = progress_data.get('conversation_xp', 0)
+    role_xp    = progress_data.get('roleplay_xp', 0)
+    repeat_xp  = progress_data.get('repeat_xp', 0)
+    spell_xp   = progress_data.get('spellbee_xp', 0)
+    mean_xp    = progress_data.get('meanings_xp', 0)
+    total_stars= progress_data.get('total_stars', 0)
+
+    # XP Milestones
+    if total_xp >= 1:   award("first_xp")
+    if total_xp >= 25:  award("xp_25")
+    if total_xp >= 50:  award("xp_50")
+    if total_xp >= 100: award("xp_100")
+    if total_xp >= 250: award("xp_250")
+    if total_xp >= 500: award("xp_500")
+
+    # Conversation
+    if conv_xp >= 10: award("conv_10")
+    if conv_xp >= 50: award("conv_50")
+
+    # Roleplay
+    if role_xp >= 10: award("role_10")
+    if role_xp >= 50: award("role_50")
+
+    # Repeat mode
+    if mode == 'repeat':
+        if difficulty == 'easy':   award("repeat_easy")
+        if difficulty == 'medium': award("repeat_medium")
+        if difficulty == 'hard':   award("repeat_hard")
+        if score == 100:           award("perfect_repeat")
+    if repeat_xp >= 50: award("repeat_50")
+
+    # Spell Bee
+    if mode == 'spellbee':
+        if difficulty == 'easy':   award("spell_easy")
+        if difficulty == 'medium': award("spell_medium")
+        if difficulty == 'hard':   award("spell_hard")
+        if score == 100:           award("perfect_spell")
+    if spell_xp >= 50: award("spell_50")
+
+    # Meanings
+    if mean_xp >= 10: award("meanings_1")
+    if mean_xp >= 50: award("meanings_50")
+
+    # Stars
+    if total_stars >= 5:  award("stars_5")
+    if total_stars >= 15: award("stars_15")
+    if total_stars >= 30: award("stars_30")
+
+    # All-Rounder: XP in all 5 modes
+    if conv_xp > 0 and role_xp > 0 and repeat_xp > 0 and spell_xp > 0 and mean_xp > 0:
+        award("all_modes")
+
+    return newly_earned
+
 # ================= ROLEPLAY QUESTION POOLS =================
 ROLEPLAY_QUESTIONS = {
     "teacher": [
@@ -100,7 +227,6 @@ ROLEPLAY_QUESTIONS = {
     ]
 }
 
-# Track recently asked questions per role to avoid repetition
 recent_roleplay_questions = {
     "teacher": [],
     "friend": [],
@@ -109,7 +235,6 @@ recent_roleplay_questions = {
 }
 
 def get_roleplay_question(roleplay_type):
-    """Get a contextually relevant question for the roleplay type without repetition"""
     questions = ROLEPLAY_QUESTIONS.get(roleplay_type, ROLEPLAY_QUESTIONS["friend"])
     recent = recent_roleplay_questions.get(roleplay_type, [])
     available_questions = [q for q in questions if q not in recent]
@@ -236,10 +361,22 @@ def init_db():
             FOREIGN KEY (roll_no) REFERENCES users (roll_no)
         )
     ''')
+    # ===== NEW: Badges table =====
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS student_badges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            roll_no TEXT NOT NULL,
+            badge_id TEXT NOT NULL,
+            earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(roll_no, badge_id),
+            FOREIGN KEY (roll_no) REFERENCES users (roll_no)
+        )
+    ''')
+    # Migration for older DBs
     c.execute("PRAGMA table_info(student_progress)")
     columns = [column[1] for column in c.fetchall()]
     if 'conversation_xp' not in columns:
-        print("Migrating database to add mode-specific XP columns...")
+        print("Migrating database: adding mode-specific XP columns...")
         c.execute('ALTER TABLE student_progress ADD COLUMN conversation_xp INTEGER DEFAULT 0')
         c.execute('ALTER TABLE student_progress ADD COLUMN roleplay_xp INTEGER DEFAULT 0')
         c.execute('ALTER TABLE student_progress ADD COLUMN repeat_xp INTEGER DEFAULT 0')
@@ -287,7 +424,6 @@ def speak_to_file(text, slow=False, max_retries=3):
         text = text[:300]
     cached_audio = get_cached_audio(text, slow)
     if cached_audio:
-        print(f"Using cached audio for: {text[:50]}...")
         return cached_audio
     os.makedirs("static/audio", exist_ok=True)
     filename = f"{uuid.uuid4()}.mp3"
@@ -296,18 +432,15 @@ def speak_to_file(text, slow=False, max_retries=3):
         try:
             if attempt > 0:
                 delay = (2 ** attempt) + random.uniform(0, 1)
-                print(f"Retry attempt {attempt + 1} after {delay:.2f}s delay...")
                 time.sleep(delay)
             else:
                 time.sleep(random.uniform(0.3, 0.8))
             gTTS(text=text, lang="en", slow=slow).save(path)
             save_to_cache(text, path, slow)
-            print(f"Successfully generated audio for: {text[:50]}...")
             return "/" + path
         except Exception as e:
             print(f"TTS attempt {attempt + 1} failed: {str(e)}")
             if attempt == max_retries - 1:
-                print(f"All {max_retries} attempts failed for TTS")
                 return None
     return None
 
@@ -336,10 +469,10 @@ Child: "{child_text}" """
 def roleplay_coach(child_text, roleplay_type):
     global conversation_context
     roles = {
-        "teacher": "You are a kind school teacher.\nHelp the student learn English.\nAsk study-related questions.\nBe encouraging and patient.",
-        "friend": "You are a friendly classmate.\nTalk casually and happily.\nAsk daily-life questions.\nBe cheerful and supportive.",
-        "interviewer": "You are a job interviewer.\nBe polite and professional.\nAsk short interview questions.\nBe encouraging but professional.",
-        "viva": "You are a viva examiner.\nBe polite and professional.\nAsk academic project questions.\nFocus on understanding.\nBe fair and encouraging."
+        "teacher":    "You are a kind school teacher.\nHelp the student learn English.\nAsk study-related questions.\nBe encouraging and patient.",
+        "friend":     "You are a friendly classmate.\nTalk casually and happily.\nAsk daily-life questions.\nBe cheerful and supportive.",
+        "interviewer":"You are a job interviewer.\nBe polite and professional.\nAsk short interview questions.\nBe encouraging but professional.",
+        "viva":       "You are a viva examiner.\nBe polite and professional.\nAsk academic project questions.\nFocus on understanding.\nBe fair and encouraging."
     }
     role_instruction = roles.get(roleplay_type, "You are a friendly English speaking partner.")
     suggested_question = get_roleplay_question(roleplay_type)
@@ -383,35 +516,23 @@ Student says:
     conversation_context = conversation_context[-1200:]
     return reply
 
-# ================= REPEAT AFTER ME - CIVIC SENSE ADDED =================
+# ================= REPEAT AFTER ME =================
 def generate_repeat_sentence(category="civic_sense", difficulty="easy"):
     global recent_sentences
     category_details = {
-        # ===== CIVIC SENSE (replaces general) =====
         "civic_sense": {
             "easy": [
-                "Keep your city clean",
-                "Do not litter on roads",
-                "Help old people cross",
-                "Wait for your turn please",
-                "Say thank you always",
-                "Be kind to others",
-                "Do not waste water",
-                "Turn off lights please",
-                "Respect your neighbours always",
+                "Keep your city clean", "Do not litter on roads", "Help old people cross",
+                "Wait for your turn please", "Say thank you always", "Be kind to others",
+                "Do not waste water", "Turn off lights please", "Respect your neighbours always",
                 "Use dustbin for waste"
             ],
             "medium": [
-                "We should not throw waste on the road",
-                "Always stand in a queue patiently",
-                "Help keep our neighbourhood clean and tidy",
-                "Switch off fans when leaving the room",
-                "We must respect traffic rules always",
-                "Plant trees to keep our earth green",
-                "Save water for the future generations",
-                "Be polite and greet everyone around you",
-                "Do not make noise in public places",
-                "Always use the zebra crossing safely"
+                "We should not throw waste on the road", "Always stand in a queue patiently",
+                "Help keep our neighbourhood clean and tidy", "Switch off fans when leaving the room",
+                "We must respect traffic rules always", "Plant trees to keep our earth green",
+                "Save water for the future generations", "Be polite and greet everyone around you",
+                "Do not make noise in public places", "Always use the zebra crossing safely"
             ],
             "hard": [
                 "We should always keep our surroundings clean and free from litter",
@@ -425,95 +546,39 @@ def generate_repeat_sentence(category="civic_sense", difficulty="easy"):
             ]
         },
         "animals": {
-            "easy": ["Dogs bark loudly", "Cats drink milk", "Birds sing songs", "Fish swim fast", "Cows eat grass",
-                     "Horses run quick", "Ducks say quack", "Lions roar loud", "Bears sleep long", "Monkeys climb trees"],
-            "medium": ["The brown dog plays with a ball", "My pet cat sleeps on the sofa",
-                      "Colorful birds fly in the sky", "Little fish swim in the pond",
-                      "The white rabbit hops around happily", "Elephants have very long trunks",
-                      "Tigers are big striped cats", "Dolphins jump in the ocean"],
-            "hard": ["The big elephant uses its trunk to drink water every day",
-                    "My pet dog loves to chase butterflies in the garden",
-                    "The clever monkey climbs trees very quickly and easily",
-                    "Beautiful peacocks spread their colorful feathers when dancing",
-                    "Tiny hummingbirds can fly backwards and hover in the air"]
+            "easy":   ["Dogs bark loudly","Cats drink milk","Birds sing songs","Fish swim fast","Cows eat grass","Horses run quick","Ducks say quack","Lions roar loud","Bears sleep long","Monkeys climb trees"],
+            "medium": ["The brown dog plays with a ball","My pet cat sleeps on the sofa","Colorful birds fly in the sky","Little fish swim in the pond","The white rabbit hops around happily","Elephants have very long trunks","Tigers are big striped cats","Dolphins jump in the ocean"],
+            "hard":   ["The big elephant uses its trunk to drink water every day","My pet dog loves to chase butterflies in the garden","The clever monkey climbs trees very quickly and easily","Beautiful peacocks spread their colorful feathers when dancing","Tiny hummingbirds can fly backwards and hover in the air"]
         },
         "food": {
-            "easy": ["I eat apples", "Pizza tastes good", "Milk is white", "Bread is soft", "Ice cream melts",
-                     "Cookies are sweet", "Juice is cold", "Cake is yummy", "Soup is hot", "Eggs are round"],
-            "medium": ["I enjoy eating chocolate ice cream", "Fresh vegetables are good for health",
-                      "Mom makes delicious pasta for lunch", "Orange juice is my favorite drink",
-                      "Hot soup warms me up quickly", "Strawberries taste sweet and juicy",
-                      "I love eating crunchy potato chips", "Sandwiches are perfect for picnics"],
-            "hard": ["My grandmother makes the most delicious cookies in the whole world",
-                    "We should eat healthy fruits and vegetables every single day",
-                    "The restaurant serves fresh and tasty food to all customers",
-                    "Drinking water keeps our body healthy and strong always",
-                    "Breakfast is the most important meal of the entire day"]
+            "easy":   ["I eat apples","Pizza tastes good","Milk is white","Bread is soft","Ice cream melts","Cookies are sweet","Juice is cold","Cake is yummy","Soup is hot","Eggs are round"],
+            "medium": ["I enjoy eating chocolate ice cream","Fresh vegetables are good for health","Mom makes delicious pasta for lunch","Orange juice is my favorite drink","Hot soup warms me up quickly","Strawberries taste sweet and juicy","I love eating crunchy potato chips","Sandwiches are perfect for picnics"],
+            "hard":   ["My grandmother makes the most delicious cookies in the whole world","We should eat healthy fruits and vegetables every single day","The restaurant serves fresh and tasty food to all customers","Drinking water keeps our body healthy and strong always","Breakfast is the most important meal of the entire day"]
         },
         "sports": {
-            "easy": ["I play football", "Run very fast", "Jump rope daily", "Swim in pool", "Kick the ball",
-                     "Throw the ball", "Catch it quick", "Hit the target", "Race with friends", "Climb the rope"],
-            "medium": ["I practice basketball every single day", "Running in the park is fun",
-                      "My friends play cricket together happily", "Swimming keeps us healthy and fit",
-                      "The team won the match yesterday", "Soccer is played with feet",
-                      "Tennis players use special rackets always", "Cycling helps build strong muscles"],
-            "hard": ["Playing outdoor games helps us stay healthy and active always",
-                    "My favorite sport is basketball because it's exciting and fun",
-                    "The athletes train very hard to win the championship trophy",
-                    "Regular exercise makes our bodies stronger and more energetic daily",
-                    "Teamwork is very important when playing any sport together"]
+            "easy":   ["I play football","Run very fast","Jump rope daily","Swim in pool","Kick the ball","Throw the ball","Catch it quick","Hit the target","Race with friends","Climb the rope"],
+            "medium": ["I practice basketball every single day","Running in the park is fun","My friends play cricket together happily","Swimming keeps us healthy and fit","The team won the match yesterday","Soccer is played with feet","Tennis players use special rackets always","Cycling helps build strong muscles"],
+            "hard":   ["Playing outdoor games helps us stay healthy and active always","My favorite sport is basketball because it's exciting and fun","The athletes train very hard to win the championship trophy","Regular exercise makes our bodies stronger and more energetic daily","Teamwork is very important when playing any sport together"]
         },
         "feelings": {
-            "easy": ["I feel happy", "Mom is sad", "Brother is angry", "Sister feels tired", "I am excited",
-                     "Dad is proud", "I feel scared", "She is brave", "He seems worried", "We are cheerful"],
-            "medium": ["I feel very happy when playing", "My friend is feeling sad today",
-                      "The movie made everyone laugh loudly", "I get excited about birthday parties",
-                      "Helping others makes me feel good", "Sometimes I feel nervous before tests",
-                      "My sister feels proud of her artwork", "The surprise made him very happy"],
-            "hard": ["When I help my friends I feel very proud and happy",
-                    "My little sister gets scared during thunderstorms at night",
-                    "Winning the competition made the entire team feel wonderful",
-                    "Sharing toys with others shows that we care about them",
-                    "Being kind to everyone makes the world a better place"]
+            "easy":   ["I feel happy","Mom is sad","Brother is angry","Sister feels tired","I am excited","Dad is proud","I feel scared","She is brave","He seems worried","We are cheerful"],
+            "medium": ["I feel very happy when playing","My friend is feeling sad today","The movie made everyone laugh loudly","I get excited about birthday parties","Helping others makes me feel good","Sometimes I feel nervous before tests","My sister feels proud of her artwork","The surprise made him very happy"],
+            "hard":   ["When I help my friends I feel very proud and happy","My little sister gets scared during thunderstorms at night","Winning the competition made the entire team feel wonderful","Sharing toys with others shows that we care about them","Being kind to everyone makes the world a better place"]
         },
         "colors": {
-            "easy": ["Sky is blue", "Grass is green", "Sun is yellow", "Roses are red", "Clouds are white",
-                     "Night is black", "Orange is bright", "Purple flowers bloom", "Pink is pretty", "Brown dirt falls"],
-            "medium": ["The beautiful rainbow has many colors", "My favorite color is bright blue",
-                      "Red roses bloom in the garden", "The green leaves look very fresh",
-                      "Yellow butterflies fly near flowers happily", "White snow covers the ground",
-                      "Orange pumpkins grow in the field", "Purple grapes taste very sweet"],
-            "hard": ["The colorful painting has red blue yellow and green colors",
-                    "My room walls are painted in light blue color",
-                    "The sunset sky shows beautiful orange and pink shades",
-                    "Rainbows appear when sunlight passes through water droplets magically",
-                    "Artists mix different colors together to create new beautiful shades"]
+            "easy":   ["Sky is blue","Grass is green","Sun is yellow","Roses are red","Clouds are white","Night is black","Orange is bright","Purple flowers bloom","Pink is pretty","Brown dirt falls"],
+            "medium": ["The beautiful rainbow has many colors","My favorite color is bright blue","Red roses bloom in the garden","The green leaves look very fresh","Yellow butterflies fly near flowers happily","White snow covers the ground","Orange pumpkins grow in the field","Purple grapes taste very sweet"],
+            "hard":   ["The colorful painting has red blue yellow and green colors","My room walls are painted in light blue color","The sunset sky shows beautiful orange and pink shades","Rainbows appear when sunlight passes through water droplets magically","Artists mix different colors together to create new beautiful shades"]
         },
         "family": {
-            "easy": ["I love mom", "Dad helps me", "Sister is kind", "Brother plays games", "Grandma tells stories",
-                     "Grandpa is funny", "Baby cries loud", "Uncle visits us", "Aunt bakes cake", "Cousin is fun"],
-            "medium": ["My mother cooks delicious food daily", "Dad takes me to school everyday",
-                      "My sister helps with homework always", "Brother plays video games with me",
-                      "Grandparents visit us every weekend regularly", "My aunt makes tasty cookies",
-                      "Uncle tells us funny jokes", "Cousins play together at parties"],
-            "hard": ["My entire family goes on vacation together every summer season",
-                    "Mom and dad work very hard to give us everything",
-                    "I love spending quality time with all my family members",
-                    "Grandparents always share interesting stories from their childhood days",
-                    "Family dinners are special times when everyone talks and laughs"]
+            "easy":   ["I love mom","Dad helps me","Sister is kind","Brother plays games","Grandma tells stories","Grandpa is funny","Baby cries loud","Uncle visits us","Aunt bakes cake","Cousin is fun"],
+            "medium": ["My mother cooks delicious food daily","Dad takes me to school everyday","My sister helps with homework always","Brother plays video games with me","Grandparents visit us every weekend regularly","My aunt makes tasty cookies","Uncle tells us funny jokes","Cousins play together at parties"],
+            "hard":   ["My entire family goes on vacation together every summer season","Mom and dad work very hard to give us everything","I love spending quality time with all my family members","Grandparents always share interesting stories from their childhood days","Family dinners are special times when everyone talks and laughs"]
         },
         "school": {
-            "easy": ["I go school", "Teacher is nice", "Books are heavy", "Math is hard", "I study daily",
-                     "Tests are scary", "Lunch is yummy", "Friends play together", "Pencils write words", "Classes start early"],
-            "medium": ["My teacher explains lessons very clearly", "I carry my school bag everyday",
-                      "Math homework is quite challenging today", "The library has many interesting books",
-                      "Science class is really fun and exciting", "Friends help each other with studies",
-                      "Reading improves our vocabulary and knowledge", "Art class lets us be creative"],
-            "hard": ["My school has a big playground where we play games",
-                    "Every morning I wake up early to catch the bus",
-                    "The teacher gives us homework to practice at home daily",
-                    "Learning new things at school makes us smarter every day",
-                    "Good students always pay attention and complete their work on time"]
+            "easy":   ["I go school","Teacher is nice","Books are heavy","Math is hard","I study daily","Tests are scary","Lunch is yummy","Friends play together","Pencils write words","Classes start early"],
+            "medium": ["My teacher explains lessons very clearly","I carry my school bag everyday","Math homework is quite challenging today","The library has many interesting books","Science class is really fun and exciting","Friends help each other with studies","Reading improves our vocabulary and knowledge","Art class lets us be creative"],
+            "hard":   ["My school has a big playground where we play games","Every morning I wake up early to catch the bus","The teacher gives us homework to practice at home daily","Learning new things at school makes us smarter every day","Good students always pay attention and complete their work on time"]
         }
     }
     cat_info = category_details.get(category, category_details["civic_sense"])
@@ -533,22 +598,9 @@ def generate_repeat_sentence(category="civic_sense", difficulty="easy"):
 def generate_spell_word(difficulty="easy"):
     global recent_words
     word_pools = {
-        "easy": ["cat", "dog", "sun", "run", "fun", "hat", "bat", "rat", "pen", "hen",
-                 "cup", "bus", "bed", "red", "leg", "bag", "fan", "can", "ten", "net",
-                 "wet", "jet", "pet", "set", "box", "fox", "six", "mix", "pig", "big",
-                 "hot", "pot", "top", "hop", "mop", "zip", "tip", "dip", "cut", "nut"],
-        "medium": ["apple", "table", "happy", "money", "water", "tiger", "banana", "flower",
-                   "garden", "winter", "summer", "mother", "father", "sister", "better",
-                   "letter", "number", "dinner", "butter", "purple", "yellow", "orange",
-                   "Monday", "Friday", "Sunday", "pencil", "window", "rabbit", "market",
-                   "simple", "castle", "people", "circle", "middle", "bottle", "little",
-                   "bubble", "double", "jungle", "candle", "handle", "puzzle", "turtle"],
-        "hard": ["beautiful", "wonderful", "elephant", "tomorrow", "yesterday", "chocolate",
-                 "hamburger", "basketball", "butterfly", "strawberry", "restaurant",
-                 "dictionary", "adventure", "delicious", "important", "different",
-                 "incredible", "vegetables", "understand", "comfortable", "celebration",
-                 "imagination", "encyclopedia", "refrigerator", "spectacular",
-                 "communication", "responsibility", "extraordinary", "accomplishment"]
+        "easy":   ["cat","dog","sun","run","fun","hat","bat","rat","pen","hen","cup","bus","bed","red","leg","bag","fan","can","ten","net","wet","jet","pet","set","box","fox","six","mix","pig","big","hot","pot","top","hop","mop","zip","tip","dip","cut","nut"],
+        "medium": ["apple","table","happy","money","water","tiger","banana","flower","garden","winter","summer","mother","father","sister","better","letter","number","dinner","butter","purple","yellow","orange","Monday","Friday","Sunday","pencil","window","rabbit","market","simple","castle","people","circle","middle","bottle","little","bubble","double","jungle","candle","handle","puzzle","turtle"],
+        "hard":   ["beautiful","wonderful","elephant","tomorrow","yesterday","chocolate","hamburger","basketball","butterfly","strawberry","restaurant","dictionary","adventure","delicious","important","different","incredible","vegetables","understand","comfortable","celebration","imagination","encyclopedia","refrigerator","spectacular","communication","responsibility","extraordinary","accomplishment"]
     }
     words = word_pools.get(difficulty, word_pools["easy"])
     available_words = [w for w in words if w not in recent_words]
@@ -750,6 +802,7 @@ def delete_account():
     try:
         conn.execute('DELETE FROM activity_log WHERE roll_no = ?', (roll_no,))
         conn.execute('DELETE FROM student_progress WHERE roll_no = ?', (roll_no,))
+        conn.execute('DELETE FROM student_badges WHERE roll_no = ?', (roll_no,))
         conn.execute('DELETE FROM student_sessions WHERE student_id = ?', (user_id,))
         conn.execute('DELETE FROM users WHERE roll_no = ? AND role = ?', (roll_no, 'student'))
         conn.commit()
@@ -806,7 +859,7 @@ def process():
 @student_required
 def repeat_sentence():
     data = request.json
-    category = data.get("category", "civic_sense")  # Default changed to civic_sense
+    category = data.get("category", "civic_sense")
     difficulty = data.get("difficulty", "easy")
     sentence = generate_repeat_sentence(category, difficulty)
     audio_normal = speak_to_file(sentence, slow=False)
@@ -913,33 +966,50 @@ def get_student_info():
     conn = get_db_connection()
     student = conn.execute('SELECT name, roll_no FROM users WHERE roll_no = ?', (roll_no,)).fetchone()
     progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
+    badges_rows = conn.execute(
+        'SELECT badge_id, earned_at FROM student_badges WHERE roll_no = ? ORDER BY earned_at DESC',
+        (roll_no,)
+    ).fetchall()
     conn.close()
     if student and progress:
         progress_data = {
             'conversation_xp': progress['conversation_xp'] or 0,
-            'roleplay_xp': progress['roleplay_xp'] or 0,
-            'repeat_xp': progress['repeat_xp'] or 0,
-            'spellbee_xp': progress['spellbee_xp'] or 0,
-            'meanings_xp': progress['meanings_xp'] or 0
+            'roleplay_xp':     progress['roleplay_xp']     or 0,
+            'repeat_xp':       progress['repeat_xp']       or 0,
+            'spellbee_xp':     progress['spellbee_xp']     or 0,
+            'meanings_xp':     progress['meanings_xp']     or 0
         }
         unlocked_features = get_unlocked_features(progress_data)
         next_unlock = get_next_unlock(progress_data)
+
+        earned_badge_ids = [row['badge_id'] for row in badges_rows]
+        badges_detail = []
+        for b in ALL_BADGES:
+            badges_detail.append({
+                **b,
+                'earned': b['id'] in earned_badge_ids,
+                'earned_at': next((row['earned_at'] for row in badges_rows if row['badge_id'] == b['id']), None)
+            })
+
         return jsonify({
             'success': True,
             'student': {
-                'name': student['name'],
-                'rollNo': student['roll_no'],
-                'xp': progress['xp'],
-                'conversationXp': progress_data['conversation_xp'],
-                'roleplayXp': progress_data['roleplay_xp'],
-                'repeatXp': progress_data['repeat_xp'],
-                'spellbeeXp': progress_data['spellbee_xp'],
-                'meaningsXp': progress_data['meanings_xp'],
-                'totalStars': progress['total_stars'],
-                'totalSessions': progress['total_sessions'],
-                'averageAccuracy': round(progress['average_accuracy'], 1),
+                'name':             student['name'],
+                'rollNo':           student['roll_no'],
+                'xp':               progress['xp'],
+                'conversationXp':   progress_data['conversation_xp'],
+                'roleplayXp':       progress_data['roleplay_xp'],
+                'repeatXp':         progress_data['repeat_xp'],
+                'spellbeeXp':       progress_data['spellbee_xp'],
+                'meaningsXp':       progress_data['meanings_xp'],
+                'totalStars':       progress['total_stars'],
+                'totalSessions':    progress['total_sessions'],
+                'averageAccuracy':  round(progress['average_accuracy'], 1),
                 'unlockedFeatures': unlocked_features,
-                'nextUnlock': next_unlock
+                'nextUnlock':       next_unlock,
+                'badges':           badges_detail,
+                'earnedBadgeCount': len(earned_badge_ids),
+                'totalBadgeCount':  len(ALL_BADGES)
             }
         })
     else:
@@ -952,28 +1022,34 @@ def update_xp():
         return jsonify({'success': False, 'message': 'Not logged in'})
     data = request.json
     roll_no = session['roll_no']
-    xp_earned = data.get('xpEarned', 0)
-    mode = data.get('mode', '').lower()
-    score = data.get('score', 0)
-    stars_earned = data.get('starsEarned', 0)
+    xp_earned   = data.get('xpEarned', 0)
+    mode        = data.get('mode', '').lower()
+    score       = data.get('score', 0)
+    stars_earned= data.get('starsEarned', 0)
+    difficulty  = data.get('difficulty', 'easy')   # NEW: frontend must send this
+
     conn = get_db_connection()
     progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
     if progress:
         old_progress = {
+            'xp':              progress['xp'] or 0,
             'conversation_xp': progress['conversation_xp'] or 0,
-            'roleplay_xp': progress['roleplay_xp'] or 0,
-            'repeat_xp': progress['repeat_xp'] or 0,
-            'spellbee_xp': progress['spellbee_xp'] or 0,
-            'meanings_xp': progress['meanings_xp'] or 0
+            'roleplay_xp':     progress['roleplay_xp']     or 0,
+            'repeat_xp':       progress['repeat_xp']       or 0,
+            'spellbee_xp':     progress['spellbee_xp']     or 0,
+            'meanings_xp':     progress['meanings_xp']     or 0,
+            'total_stars':     progress['total_stars']      or 0
         }
         old_unlocked = get_unlocked_features(old_progress)
-        new_total_xp = progress['xp'] + xp_earned
+        new_total_xp = old_progress['xp'] + xp_earned
         mode_xp_column = f"{mode}_xp"
         if mode_xp_column in old_progress:
             new_mode_xp = old_progress[mode_xp_column] + xp_earned
             old_progress[mode_xp_column] = new_mode_xp
         else:
             new_mode_xp = 0
+        old_progress['xp'] = new_total_xp
+        old_progress['total_stars'] = old_progress['total_stars'] + stars_earned
         new_unlocked = get_unlocked_features(old_progress)
         newly_unlocked_features = [f for f in new_unlocked if f not in old_unlocked]
         old_avg = progress['average_accuracy']
@@ -982,6 +1058,7 @@ def update_xp():
             new_avg = score
         else:
             new_avg = ((old_avg * total_sessions) + score) / (total_sessions + 1)
+
         update_query = f'''
             UPDATE student_progress
             SET xp = ?,
@@ -995,22 +1072,72 @@ def update_xp():
         conn.execute(update_query, (new_total_xp, new_mode_xp, stars_earned, new_avg, datetime.now(), roll_no))
         conn.execute('''INSERT INTO activity_log (roll_no, mode, score, xp_earned, stars_earned)
             VALUES (?, ?, ?, ?, ?)''', (roll_no, mode, score, xp_earned, stars_earned))
+
+        # ===== CHECK AND SAVE NEW BADGES =====
+        newly_earned_badge_ids = check_earned_badges(
+            roll_no, old_progress,
+            mode=mode, difficulty=difficulty,
+            score=score, stars_earned=stars_earned
+        )
+        for badge_id in newly_earned_badge_ids:
+            try:
+                conn.execute(
+                    'INSERT OR IGNORE INTO student_badges (roll_no, badge_id) VALUES (?, ?)',
+                    (roll_no, badge_id)
+                )
+            except Exception as e:
+                print(f"Badge insert error: {e}")
+
         conn.commit()
         conn.close()
+
+        newly_earned_badges_detail = [
+            {**BADGE_MAP[bid], 'earned': True} for bid in newly_earned_badge_ids if bid in BADGE_MAP
+        ]
+
         next_unlock = get_next_unlock(old_progress)
         return jsonify({
-            'success': True,
-            'newXP': new_total_xp,
-            'newModeXP': new_mode_xp,
-            'mode': mode,
+            'success':               True,
+            'newXP':                 new_total_xp,
+            'newModeXP':             new_mode_xp,
+            'mode':                  mode,
             'newlyUnlockedFeatures': newly_unlocked_features,
-            'unlockedFeatures': new_unlocked,
-            'nextUnlock': next_unlock,
-            'averageAccuracy': round(new_avg, 1)
+            'unlockedFeatures':      new_unlocked,
+            'nextUnlock':            next_unlock,
+            'averageAccuracy':       round(new_avg, 1),
+            'newlyEarnedBadges':     newly_earned_badges_detail   # NEW
         })
     else:
         conn.close()
         return jsonify({'success': False, 'message': 'Progress not found'})
+
+# ================= BADGE ROUTES =================
+@app.route("/get_badges")
+@student_required
+def get_badges():
+    if 'roll_no' not in session:
+        return jsonify({'success': False})
+    roll_no = session['roll_no']
+    conn = get_db_connection()
+    rows = conn.execute(
+        'SELECT badge_id, earned_at FROM student_badges WHERE roll_no = ? ORDER BY earned_at DESC',
+        (roll_no,)
+    ).fetchall()
+    conn.close()
+    earned_ids = {row['badge_id']: row['earned_at'] for row in rows}
+    badges = []
+    for b in ALL_BADGES:
+        badges.append({
+            **b,
+            'earned':    b['id'] in earned_ids,
+            'earned_at': earned_ids.get(b['id'])
+        })
+    return jsonify({
+        'success': True,
+        'badges':  badges,
+        'earnedCount': len(earned_ids),
+        'totalCount':  len(ALL_BADGES)
+    })
 
 # ================= TEACHER ROUTES =================
 @app.route("/teacher-dashboard")
@@ -1043,25 +1170,25 @@ def get_all_students():
     for student in students:
         progress_data = {
             'conversation_xp': student['conversation_xp'] or 0,
-            'roleplay_xp': student['roleplay_xp'] or 0,
-            'repeat_xp': student['repeat_xp'] or 0,
-            'spellbee_xp': student['spellbee_xp'] or 0,
-            'meanings_xp': student['meanings_xp'] or 0
+            'roleplay_xp':     student['roleplay_xp']     or 0,
+            'repeat_xp':       student['repeat_xp']       or 0,
+            'spellbee_xp':     student['spellbee_xp']     or 0,
+            'meanings_xp':     student['meanings_xp']     or 0
         }
         unlocked_features = get_unlocked_features(progress_data)
         students_list.append({
-            'name': student['name'],
-            'rollNo': student['roll_no'],
-            'xp': student['xp'] or 0,
-            'conversationXp': progress_data['conversation_xp'],
-            'roleplayXp': progress_data['roleplay_xp'],
-            'repeatXp': progress_data['repeat_xp'],
-            'spellbeeXp': progress_data['spellbee_xp'],
-            'meaningsXp': progress_data['meanings_xp'],
-            'totalStars': student['total_stars'] or 0,
-            'totalSessions': student['total_sessions'] or 0,
-            'averageAccuracy': round(student['average_accuracy'] or 0, 1),
-            'lastActive': student['last_active'],
+            'name':             student['name'],
+            'rollNo':           student['roll_no'],
+            'xp':               student['xp'] or 0,
+            'conversationXp':   progress_data['conversation_xp'],
+            'roleplayXp':       progress_data['roleplay_xp'],
+            'repeatXp':         progress_data['repeat_xp'],
+            'spellbeeXp':       progress_data['spellbee_xp'],
+            'meaningsXp':       progress_data['meanings_xp'],
+            'totalStars':       student['total_stars'] or 0,
+            'totalSessions':    student['total_sessions'] or 0,
+            'averageAccuracy':  round(student['average_accuracy'] or 0, 1),
+            'lastActive':       student['last_active'],
             'unlockedFeatures': unlocked_features
         })
     return jsonify({'success': True, 'students': students_list})
@@ -1083,43 +1210,53 @@ def get_student_details(roll_no):
         return jsonify({'success': False, 'message': 'Student not found'})
     activities = conn.execute('''
         SELECT date, mode, score, xp_earned, stars_earned
-        FROM activity_log
-        WHERE roll_no = ?
-        ORDER BY date DESC
-        LIMIT 50
+        FROM activity_log WHERE roll_no = ? ORDER BY date DESC LIMIT 50
     ''', (roll_no,)).fetchall()
+    badges_rows = conn.execute(
+        'SELECT badge_id, earned_at FROM student_badges WHERE roll_no = ? ORDER BY earned_at DESC',
+        (roll_no,)
+    ).fetchall()
     conn.close()
     activity_list = [{'date': a['date'], 'mode': a['mode'], 'score': round(a['score'] or 0, 1),
                       'xpEarned': a['xp_earned'], 'starsEarned': a['stars_earned']} for a in activities]
     progress_data = {
         'conversation_xp': student['conversation_xp'] or 0,
-        'roleplay_xp': student['roleplay_xp'] or 0,
-        'repeat_xp': student['repeat_xp'] or 0,
-        'spellbee_xp': student['spellbee_xp'] or 0,
-        'meanings_xp': student['meanings_xp'] or 0
+        'roleplay_xp':     student['roleplay_xp']     or 0,
+        'repeat_xp':       student['repeat_xp']       or 0,
+        'spellbee_xp':     student['spellbee_xp']     or 0,
+        'meanings_xp':     student['meanings_xp']     or 0
     }
     unlocked_features = get_unlocked_features(progress_data)
     next_unlock = get_next_unlock(progress_data)
+    earned_ids = {row['badge_id']: row['earned_at'] for row in badges_rows}
+    badges_detail = [
+        {**b, 'earned': b['id'] in earned_ids, 'earned_at': earned_ids.get(b['id'])}
+        for b in ALL_BADGES
+    ]
     student_data = {
-        'name': student['name'], 'rollNo': student['roll_no'],
-        'xp': student['xp'] or 0,
-        'conversationXp': progress_data['conversation_xp'],
-        'roleplayXp': progress_data['roleplay_xp'],
-        'repeatXp': progress_data['repeat_xp'],
-        'spellbeeXp': progress_data['spellbee_xp'],
-        'meaningsXp': progress_data['meanings_xp'],
-        'totalStars': student['total_stars'] or 0,
-        'totalSessions': student['total_sessions'] or 0,
-        'averageAccuracy': round(student['average_accuracy'] or 0, 1),
-        'lastActive': student['last_active'],
+        'name':             student['name'],
+        'rollNo':           student['roll_no'],
+        'xp':               student['xp'] or 0,
+        'conversationXp':   progress_data['conversation_xp'],
+        'roleplayXp':       progress_data['roleplay_xp'],
+        'repeatXp':         progress_data['repeat_xp'],
+        'spellbeeXp':       progress_data['spellbee_xp'],
+        'meaningsXp':       progress_data['meanings_xp'],
+        'totalStars':       student['total_stars'] or 0,
+        'totalSessions':    student['total_sessions'] or 0,
+        'averageAccuracy':  round(student['average_accuracy'] or 0, 1),
+        'lastActive':       student['last_active'],
         'unlockedFeatures': unlocked_features,
-        'nextUnlock': next_unlock,
-        'activityLog': activity_list
+        'nextUnlock':       next_unlock,
+        'activityLog':      activity_list,
+        'badges':           badges_detail,
+        'earnedBadgeCount': len(earned_ids),
+        'totalBadgeCount':  len(ALL_BADGES)
     }
     return jsonify({'success': True, 'student': student_data})
 
 import os
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render provides PORT
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
