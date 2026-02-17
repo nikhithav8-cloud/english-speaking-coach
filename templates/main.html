@@ -1528,16 +1528,18 @@
             document.getElementById('totalScore').textContent=totalStars;
             updateAccuracy(); updateBadges();
 
-            // *** DIFFICULTY-BASED XP per stage ***
-            const xpForThisStage = DIFFICULTY_XP[currentRepeatDifficulty] || 1;
-            if (data.stars > 0) {
-                awardXP(xpForThisStage, 'repeat', data.score, data.stars, currentRepeatDifficulty);
-            }
-
+            // *** Award XP only after ALL 5 questions are done ***
             if (currentStage >= totalStages) {
-                const avgScore = stageScores.reduce((a,b)=>a+b,0)/stageScores.length;
-                const perfectBonus = totalStars===15 ? 5 : 0;
-                if (perfectBonus > 0) awardXP(perfectBonus, 'repeat', avgScore, 0, currentRepeatDifficulty);
+                const avgScore = stageScores.reduce((a,b)=>a+b,0) / stageScores.length;
+                const xpPerStage = DIFFICULTY_XP[currentRepeatDifficulty] || 1;
+                // Count only stages where student earned at least 1 star
+                const stagesWithStars = stageScores.filter(s => s >= 60).length;
+                const totalXP = xpPerStage * stagesWithStars;
+                const perfectBonus = totalStars === 15 ? 5 : 0;
+                const finalXP = totalXP + perfectBonus;
+                if (finalXP > 0) {
+                    awardXP(finalXP, 'repeat', avgScore, totalStars, currentRepeatDifficulty);
+                }
             }
 
             setTimeout(getNewSentence, 3000);
@@ -1668,16 +1670,18 @@
             document.getElementById('spellTotalScore').textContent=spellTotalStars;
             updateSpellAccuracy(); updateSpellBadges();
 
-            // *** DIFFICULTY-BASED XP per stage ***
-            const xpForThisStage = DIFFICULTY_XP[currentSpellDifficulty] || 1;
-            if (data.stars > 0) {
-                awardXP(xpForThisStage, 'spellbee', data.correct?100:0, data.stars, currentSpellDifficulty);
-            }
-
-            if (currentSpellStage>=totalStages) {
-                const avgScore=spellStageScores.reduce((a,b)=>a+b,0)/spellStageScores.length;
-                const perfectBonus=spellTotalStars===15?5:0;
-                if(perfectBonus>0) awardXP(perfectBonus,'spellbee',avgScore,0,currentSpellDifficulty);
+            // *** Award XP only after ALL 5 questions are done ***
+            if (currentSpellStage >= totalStages) {
+                const avgScore = spellStageScores.reduce((a,b)=>a+b,0) / spellStageScores.length;
+                const xpPerStage = DIFFICULTY_XP[currentSpellDifficulty] || 1;
+                // Count only stages where student earned at least 1 star
+                const stagesWithStars = spellStageScores.filter(s => s >= 1).length;
+                const totalXP = xpPerStage * stagesWithStars;
+                const perfectBonus = spellTotalStars === 15 ? 5 : 0;
+                const finalXP = totalXP + perfectBonus;
+                if (finalXP > 0) {
+                    awardXP(finalXP, 'spellbee', avgScore, spellTotalStars, currentSpellDifficulty);
+                }
             }
 
             setTimeout(getNewWord, 3500);
