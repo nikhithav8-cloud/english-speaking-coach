@@ -114,7 +114,7 @@
             z-index: 10;
         }
 
-        /* ========== XP SYSTEM STYLES - UPDATED TO LIGHT YELLOW ========== */
+        /* ========== XP SYSTEM STYLES - MODE-SPECIFIC ========== */
         .xp-header {
             background: linear-gradient(135deg, #fff9e6 0%, #ffe680 100%);
             padding: 20px 30px;
@@ -164,16 +164,6 @@
             flex-wrap: wrap;
         }
 
-        .level-badge {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: 900;
-            font-size: 16px;
-            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
-        }
-
         .xp-amount {
             font-size: 20px;
             font-weight: 700;
@@ -184,47 +174,54 @@
             border: 2px solid #f39c12;
         }
 
-        .xp-progress-container {
-            width: 100%;
+        /* Mode-specific XP displays */
+        .mode-xp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .xp-progress-bar {
-            width: 100%;
-            height: 35px;
-            background: rgba(243, 156, 18, 0.2);
-            border-radius: 17px;
-            overflow: hidden;
-            margin-bottom: 8px;
-            border: 2px solid #f39c12;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        .mode-xp-card {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #ffd700;
         }
 
-        .xp-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-            background-size: 200% 100%;
-            transition: width 0.8s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .mode-xp-card.locked {
+            opacity: 0.5;
+            background: rgba(149, 165, 166, 0.3);
+            border-color: #95a5a6;
+        }
+
+        .mode-xp-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+
+        .mode-xp-value {
+            font-size: 18px;
             font-weight: 900;
-            color: #2d3436;
-            font-size: 14px;
-            position: relative;
-            animation: shimmerXP 3s linear infinite;
+            color: #f39c12;
         }
 
-        @keyframes shimmerXP {
-            0% { background-position: 200% center; }
-            100% { background-position: -200% center; }
+        .mode-xp-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(243, 156, 18, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
         }
 
-        .xp-next-level {
-            text-align: right;
-            font-size: 14px;
-            opacity: 0.9;
-            font-weight: 600;
-            color: #2d3436;
+        .mode-xp-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%);
+            transition: width 0.8s ease;
         }
 
         /* XP Gain Popup */
@@ -253,25 +250,25 @@
             to { opacity: 0; }
         }
 
-        /* Level Up Notification */
-        .level-up-notification {
+        /* Feature Unlock Notification */
+        .unlock-notification {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
             padding: 40px 60px;
             border-radius: 30px;
-            font-size: 48px;
+            font-size: 32px;
             font-weight: 900;
-            color: #2d3436;
+            color: white;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             z-index: 10000;
-            animation: levelUp 2s ease-out;
+            animation: unlockPop 2s ease-out;
             text-align: center;
         }
 
-        @keyframes levelUp {
+        @keyframes unlockPop {
             0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); }
             100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 1; }
@@ -423,7 +420,7 @@
             transform: scale(1.05);
         }
 
-        /* Chat and other existing styles remain the same */
+        /* Chat and other existing styles */
         .chat-area {
             background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
             border-radius: 20px;
@@ -1221,12 +1218,11 @@
                 flex-wrap: wrap;
             }
 
-            .level-up-notification {
+            .unlock-notification {
                 padding: 30px 40px;
-                font-size: 36px;
+                font-size: 24px;
             }
 
-            /* MOBILE FIX FOR WORD INPUT */
             .word-input-container {
                 padding: 20px;
             }
@@ -1246,6 +1242,10 @@
                 width: 100%;
                 min-width: 100%;
             }
+
+            .mode-xp-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
@@ -1261,7 +1261,6 @@
                 font-size: 85px;
             }
 
-            /* ADDITIONAL MOBILE FIX FOR SMALLER SCREENS */
             .word-input-container {
                 padding: 15px;
             }
@@ -1269,6 +1268,10 @@
             .word-input {
                 padding: 12px;
                 font-size: 16px;
+            }
+
+            .mode-xp-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -1293,7 +1296,6 @@
             }
         }
 
-        /* Pulse animation for mascot on load */
         @keyframes initialPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.15); }
@@ -1324,22 +1326,52 @@
     <div class="star-bg" style="top: 60%; right: 25%;">💫</div>
 
     <div class="container">
-        <!-- XP Header - Student Progress Display -->
+        <!-- XP Header - Student Progress Display with Mode-Specific XP -->
         <div class="xp-header">
             <div class="xp-info">
                 <div class="student-name" id="studentName">👤 Loading...</div>
                 <div class="level-display">
-                    <span class="level-badge" id="levelBadge">Level 1</span>
-                    <span class="xp-amount" id="xpAmount">0 XP</span>
+                    <span class="xp-amount" id="xpAmount">0 XP Total</span>
                 </div>
             </div>
-            <div class="xp-progress-container">
-                <div class="xp-progress-bar">
-                    <div class="xp-progress-fill" id="xpProgressFill" style="width: 0%;">
-                        <span id="xpProgressText">0/50</span>
+            
+            <!-- Mode-specific XP Grid -->
+            <div class="mode-xp-grid" id="modeXpGrid">
+                <div class="mode-xp-card" data-mode="conversation">
+                    <div class="mode-xp-name">💬 Conversation</div>
+                    <div class="mode-xp-value" id="conversationXp">0/50</div>
+                    <div class="mode-xp-progress">
+                        <div class="mode-xp-progress-fill" id="conversationProgress" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="xp-next-level" id="xpNextLevel">50 XP to Level 2</div>
+                <div class="mode-xp-card locked" data-mode="roleplay">
+                    <div class="mode-xp-name">🎭 Roleplay</div>
+                    <div class="mode-xp-value" id="roleplayXp">🔒</div>
+                    <div class="mode-xp-progress">
+                        <div class="mode-xp-progress-fill" id="roleplayProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mode-xp-card locked" data-mode="repeat">
+                    <div class="mode-xp-name">🔁 Repeat</div>
+                    <div class="mode-xp-value" id="repeatXp">🔒</div>
+                    <div class="mode-xp-progress">
+                        <div class="mode-xp-progress-fill" id="repeatProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mode-xp-card locked" data-mode="spellbee">
+                    <div class="mode-xp-name">🐝 Spell Bee</div>
+                    <div class="mode-xp-value" id="spellbeeXp">🔒</div>
+                    <div class="mode-xp-progress">
+                        <div class="mode-xp-progress-fill" id="spellbeeProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mode-xp-card locked" data-mode="meanings">
+                    <div class="mode-xp-name">📖 Meanings</div>
+                    <div class="mode-xp-value" id="meaningsXp">🔒</div>
+                    <div class="mode-xp-progress">
+                        <div class="mode-xp-progress-fill" id="meaningsProgress" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1664,22 +1696,21 @@
         let currentWordAudio = '';
         let currentUsageAudio = '';
 
-        // ========== XP SYSTEM VARIABLES - CHANGED TO 50 XP ==========
+        // ========== XP SYSTEM VARIABLES - MODE-SPECIFIC ==========
         let studentXP = 0;
-        let studentLevel = 1;
         let studentName = 'Student';
         let studentRollNo = '';
+        let modeXP = {
+            conversation: 0,
+            roleplay: 0,
+            repeat: 0,
+            spellbee: 0,
+            meanings: 0
+        };
 
         // ========== FEATURE UNLOCK SYSTEM ==========
         let unlockedFeatures = ['conversation'];  // Default unlock
-        
-        const FEATURE_UNLOCKS = {
-            1: ['conversation'],
-            2: ['roleplay'],
-            3: ['repeat'],
-            4: ['spellbee'],
-            5: ['meanings']
-        };
+        const XP_PER_UNLOCK = 50;
 
         // Check if a feature is unlocked
         function isFeatureUnlocked(feature) {
@@ -1696,16 +1727,6 @@
                 'meanings': 'Word Meanings Mode'
             };
             return names[feature] || feature;
-        }
-
-        // Get required level for feature
-        function getRequiredLevel(feature) {
-            for (let level in FEATURE_UNLOCKS) {
-                if (FEATURE_UNLOCKS[level].includes(feature)) {
-                    return parseInt(level);
-                }
-            }
-            return 1;
         }
 
         // Update UI based on unlocked features
@@ -1730,20 +1751,37 @@
                     }
                 }
             });
+
+            // Update mode XP cards
+            const modeCards = document.querySelectorAll('.mode-xp-card');
+            modeCards.forEach(card => {
+                const mode = card.getAttribute('data-mode');
+                if (isFeatureUnlocked(mode)) {
+                    card.classList.remove('locked');
+                } else {
+                    card.classList.add('locked');
+                }
+            });
         }
 
         // Show next unlock info
         function showNextUnlockInfo(nextUnlock) {
             const nextUnlockDiv = document.getElementById('nextUnlockInfo');
             if (nextUnlockDiv && nextUnlock) {
-                const featureName = getFeatureDisplayName(nextUnlock.features[0]);
+                const featureName = getFeatureDisplayName(nextUnlock.feature);
+                const modeName = nextUnlock.current_mode.charAt(0).toUpperCase() + nextUnlock.current_mode.slice(1);
                 nextUnlockDiv.innerHTML = `
-                    🔓 Next Unlock: <strong>${featureName}</strong> at Level ${nextUnlock.level}
-                    <span style="margin-left: 10px; color: #e17055;">(${nextUnlock.xp_needed} XP needed)</span>
+                    🔓 Next Unlock: <strong>${featureName}</strong>
+                    <span style="margin-left: 10px; color: #e17055;">
+                        (Earn ${nextUnlock.xp_needed} more XP in ${modeName} mode)
+                    </span>
                 `;
                 nextUnlockDiv.style.display = 'block';
             } else {
-                nextUnlockDiv.style.display = 'none';
+                if (nextUnlockDiv) {
+                    nextUnlockDiv.innerHTML = '🎉 <strong>All features unlocked!</strong> Keep practicing to improve your skills!';
+                    nextUnlockDiv.style.display = 'block';
+                }
             }
         }
 
@@ -1758,7 +1796,7 @@
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
 
-        // ========== XP SYSTEM FUNCTIONS - CHANGED TO 50 XP ==========
+        // ========== XP SYSTEM FUNCTIONS - MODE-SPECIFIC ==========
         async function loadStudentInfo() {
             try {
                 const response = await fetch('/get_student_info');
@@ -1766,37 +1804,34 @@
                 
                 if (data.success) {
                     studentXP = data.student.xp || 0;
-                    studentLevel = data.student.level || calculateLevel(studentXP);
                     studentName = data.student.name || 'Student';
                     studentRollNo = data.student.rollNo || '';
                     unlockedFeatures = data.student.unlockedFeatures || ['conversation'];
                     
+                    // Load mode-specific XP
+                    modeXP.conversation = data.student.conversationXp || 0;
+                    modeXP.roleplay = data.student.roleplayXp || 0;
+                    modeXP.repeat = data.student.repeatXp || 0;
+                    modeXP.spellbee = data.student.spellbeeXp || 0;
+                    modeXP.meanings = data.student.meaningsXp || 0;
+                    
                     updateXPDisplay();
-                    updateFeatureUI();  // Update locked/unlocked modes
+                    updateFeatureUI();
                     
                     // Show next unlock notification
                     if (data.student.nextUnlock) {
                         showNextUnlockInfo(data.student.nextUnlock);
+                    } else {
+                        showNextUnlockInfo(null); // All unlocked
                     }
                 }
             } catch (error) {
                 console.error('Error loading student info:', error);
                 studentXP = 0;
-                studentLevel = 1;
                 unlockedFeatures = ['conversation'];
                 updateXPDisplay();
                 updateFeatureUI();
             }
-        }
-
-        function calculateLevel(xp) {
-            return Math.floor(xp / 50) + 1;  // Changed to 50
-        }
-
-        function xpToNextLevel(currentXP) {
-            const currentLevel = calculateLevel(currentXP);
-            const nextLevelXP = currentLevel * 50;  // Changed to 50
-            return nextLevelXP - currentXP;
         }
 
         function updateXPDisplay() {
@@ -1805,36 +1840,32 @@
                 nameElement.textContent = '👤 ' + capitalizeFirstLetter(studentName);
             }
             
-            const levelBadge = document.getElementById('levelBadge');
-            if (levelBadge) {
-                levelBadge.textContent = `Level ${studentLevel}`;
-            }
-            
             const xpAmount = document.getElementById('xpAmount');
             if (xpAmount) {
-                xpAmount.textContent = `${studentXP} XP`;
+                xpAmount.textContent = `${studentXP} XP Total`;
             }
             
-            const xpForCurrentLevel = (studentLevel - 1) * 50;  // Changed to 50
-            const xpForNext = studentLevel * 50;  // Changed to 50
-            const xpInCurrentLevel = studentXP - xpForCurrentLevel;
-            const xpNeeded = xpForNext - xpForCurrentLevel;
+            // Update mode-specific XP displays
+            updateModeXPDisplay('conversation', modeXP.conversation);
+            updateModeXPDisplay('roleplay', modeXP.roleplay);
+            updateModeXPDisplay('repeat', modeXP.repeat);
+            updateModeXPDisplay('spellbee', modeXP.spellbee);
+            updateModeXPDisplay('meanings', modeXP.meanings);
+        }
+
+        function updateModeXPDisplay(mode, xp) {
+            const xpElement = document.getElementById(`${mode}Xp`);
+            const progressElement = document.getElementById(`${mode}Progress`);
             
-            const percentage = (xpInCurrentLevel / xpNeeded) * 100;
-            const progressFill = document.getElementById('xpProgressFill');
-            if (progressFill) {
-                progressFill.style.width = percentage + '%';
-            }
-            
-            const progressText = document.getElementById('xpProgressText');
-            if (progressText) {
-                progressText.textContent = `${xpInCurrentLevel}/${xpNeeded}`;
-            }
-            
-            const nextLevel = document.getElementById('xpNextLevel');
-            if (nextLevel) {
-                const remaining = xpForNext - studentXP;
-                nextLevel.textContent = `${remaining} XP to Level ${studentLevel + 1}`;
+            if (xpElement && progressElement) {
+                if (isFeatureUnlocked(mode)) {
+                    const percentage = Math.min((xp / XP_PER_UNLOCK) * 100, 100);
+                    xpElement.textContent = `${xp}/${XP_PER_UNLOCK}`;
+                    progressElement.style.width = percentage + '%';
+                } else {
+                    xpElement.textContent = '🔒';
+                    progressElement.style.width = '0%';
+                }
             }
         }
 
@@ -1856,23 +1887,25 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    const oldLevel = studentLevel;
                     studentXP = data.newXP;
-                    studentLevel = data.newLevel;
+                    modeXP[mode] = data.newModeXP;
                     unlockedFeatures = data.unlockedFeatures || unlockedFeatures;
                     
                     updateXPDisplay();
-                    updateFeatureUI();  // Update locked/unlocked modes
+                    updateFeatureUI();
                     
-                    if (data.leveledUp && data.newLevel > oldLevel) {
+                    // Show unlock notification if new features were unlocked
+                    if (data.newlyUnlockedFeatures && data.newlyUnlockedFeatures.length > 0) {
                         setTimeout(() => {
-                            showLevelUpAnimation(data.newLevel, data.newlyUnlockedFeatures || []);
+                            showFeatureUnlockAnimation(data.newlyUnlockedFeatures);
                         }, 500);
                     }
                     
                     // Update next unlock info
                     if (data.nextUnlock) {
                         showNextUnlockInfo(data.nextUnlock);
+                    } else {
+                        showNextUnlockInfo(null); // All unlocked
                     }
                 }
             } catch (error) {
@@ -1891,29 +1924,24 @@
             }, 3000);
         }
 
-        function showLevelUpAnimation(newLevel, newlyUnlockedFeatures) {
+        function showFeatureUnlockAnimation(newlyUnlockedFeatures) {
             createConfetti();
             
             const notification = document.createElement('div');
-            notification.className = 'level-up-notification';
+            notification.className = 'unlock-notification';
             
-            let featureText = '';
-            if (newlyUnlockedFeatures && newlyUnlockedFeatures.length > 0) {
-                const featureName = getFeatureDisplayName(newlyUnlockedFeatures[0]);
-                featureText = `<div style="font-size: 24px; margin-top: 20px; animation: slideIn 0.5s ease-out 0.5s both;">🎉 New Feature Unlocked:<br/><strong>${featureName}</strong> 🎉</div>`;
-            }
+            const featureName = getFeatureDisplayName(newlyUnlockedFeatures[0]);
             
             notification.innerHTML = `
-                <div>🎉 LEVEL UP! 🎉</div>
-                <div style="font-size: 72px; margin: 20px 0;">⭐</div>
-                <div style="font-size: 36px;">Level ${newLevel}</div>
-                ${featureText}
+                <div>🎉 NEW FEATURE UNLOCKED! 🎉</div>
+                <div style="font-size: 48px; margin: 20px 0;">🔓</div>
+                <div style="font-size: 28px;"><strong>${featureName}</strong></div>
             `;
             document.body.appendChild(notification);
             
             setTimeout(() => {
                 notification.remove();
-                updateFeatureUI();  // Make sure UI is updated after animation
+                updateFeatureUI();
             }, 4000);
         }
 
@@ -1922,7 +1950,7 @@
             stopAllMicAndAudio();
             
             if (confirm('Are you sure you want to exit to the home page?')) {
-                window.location.href = '/';
+                window.location.href = '/dashboard';
             }
         }
 
@@ -1988,9 +2016,8 @@
         function switchMode(mode) {
             // Check if mode is unlocked
             if (!isFeatureUnlocked(mode)) {
-                const requiredLevel = getRequiredLevel(mode);
                 const featureName = getFeatureDisplayName(mode);
-                alert(`🔒 ${featureName} is locked!\n\nReach Level ${requiredLevel} to unlock it.\nYou are currently at Level ${studentLevel}.`);
+                alert(`🔒 ${featureName} is locked!\n\nComplete challenges in the current mode to unlock it.`);
                 return;
             }
             
@@ -2086,20 +2113,22 @@
                 
                 addMessage(data.reply, 'ai', chatAreaId);
                 
-                const audio = new Audio(data.audio);
-                currentAudioPlaying = audio;
-                audio.play();
-                
-                audio.onended = function() {
-                    currentAudioPlaying = null;
-                    awardXP(5, 'conversation', 100, 1);
+                if (data.audio) {
+                    const audio = new Audio(data.audio);
+                    currentAudioPlaying = audio;
+                    audio.play();
                     
-                    if (autoReactivate && currentMode === 'conversation') {
-                        setTimeout(() => {
-                            startRecording();
-                        }, 500);
-                    }
-                };
+                    audio.onended = function() {
+                        currentAudioPlaying = null;
+                        awardXP(5, 'conversation', 100, 1);
+                        
+                        if (autoReactivate && currentMode === 'conversation') {
+                            setTimeout(() => {
+                                startRecording();
+                            }, 500);
+                        }
+                    };
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -2163,20 +2192,22 @@
                 
                 addMessage(data.reply, 'ai', chatAreaId);
                 
-                const audio = new Audio(data.audio);
-                currentAudioPlaying = audio;
-                audio.play();
-                
-                audio.onended = function() {
-                    currentAudioPlaying = null;
-                    awardXP(8, 'roleplay', 100, 1);
+                if (data.audio) {
+                    const audio = new Audio(data.audio);
+                    currentAudioPlaying = audio;
+                    audio.play();
                     
-                    if (autoReactivate && currentMode === 'roleplay') {
-                        setTimeout(() => {
-                            startRoleplayRecording();
-                        }, 500);
-                    }
-                };
+                    audio.onended = function() {
+                        currentAudioPlaying = null;
+                        awardXP(8, 'roleplay', 100, 1);
+                        
+                        if (autoReactivate && currentMode === 'roleplay') {
+                            setTimeout(() => {
+                                startRoleplayRecording();
+                            }, 500);
+                        }
+                    };
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -2239,22 +2270,26 @@
                 document.getElementById('slowBtn').style.display = 'block';
                 document.getElementById('repeatMicBtn').style.display = 'block';
                 
-                const audio = new Audio(data.audio);
+                if (data.audio) {
+                    const audio = new Audio(data.audio);
+                    currentAudioPlaying = audio;
+                    audio.play();
+                    audio.onended = function() {
+                        currentAudioPlaying = null;
+                    };
+                }
+            });
+        }
+
+        function playSlow() {
+            if (currentAudioSlow) {
+                const audio = new Audio(currentAudioSlow);
                 currentAudioPlaying = audio;
                 audio.play();
                 audio.onended = function() {
                     currentAudioPlaying = null;
                 };
-            });
-        }
-
-        function playSlow() {
-            const audio = new Audio(currentAudioSlow);
-            currentAudioPlaying = audio;
-            audio.play();
-            audio.onended = function() {
-                currentAudioPlaying = null;
-            };
+            }
         }
 
         function recordRepeat() {
@@ -2507,12 +2542,14 @@
                 document.getElementById('checkSpellBtn').style.display = 'block';
                 document.getElementById('spellInputContainer').style.display = 'block';
                 
-                const audio = new Audio(data.audio_word);
-                currentAudioPlaying = audio;
-                audio.play();
-                audio.onended = function() {
-                    currentAudioPlaying = null;
-                };
+                if (data.audio_word) {
+                    const audio = new Audio(data.audio_word);
+                    currentAudioPlaying = audio;
+                    audio.play();
+                    audio.onended = function() {
+                        currentAudioPlaying = null;
+                    };
+                }
                 
                 setTimeout(() => {
                     document.getElementById('spellingInput').focus();
@@ -2521,21 +2558,25 @@
         }
 
         function playWordAgain() {
-            const audio = new Audio(currentWordAudio);
-            currentAudioPlaying = audio;
-            audio.play();
-            audio.onended = function() {
-                currentAudioPlaying = null;
-            };
+            if (currentWordAudio) {
+                const audio = new Audio(currentWordAudio);
+                currentAudioPlaying = audio;
+                audio.play();
+                audio.onended = function() {
+                    currentAudioPlaying = null;
+                };
+            }
         }
 
         function playUsageAgain() {
-            const audio = new Audio(currentUsageAudio);
-            currentAudioPlaying = audio;
-            audio.play();
-            audio.onended = function() {
-                currentAudioPlaying = null;
-            };
+            if (currentUsageAudio) {
+                const audio = new Audio(currentUsageAudio);
+                currentAudioPlaying = audio;
+                audio.play();
+                audio.onended = function() {
+                    currentAudioPlaying = null;
+                };
+            }
         }
 
         function checkSpelling() {
@@ -2741,13 +2782,15 @@
                     </div>
                 `;
                 
-                const audio = new Audio(data.audio);
-                currentAudioPlaying = audio;
-                audio.play();
-                audio.onended = function() {
-                    currentAudioPlaying = null;
-                    awardXP(10, 'meanings', 100, 1);
-                };
+                if (data.audio) {
+                    const audio = new Audio(data.audio);
+                    currentAudioPlaying = audio;
+                    audio.play();
+                    audio.onended = function() {
+                        currentAudioPlaying = null;
+                        awardXP(10, 'meanings', 100, 1);
+                    };
+                }
             })
             .catch(error => {
                 soundWave.classList.remove('active');
@@ -2762,12 +2805,14 @@
         }
 
         function playMeaningAudio(audioPath) {
-            const audio = new Audio(audioPath);
-            currentAudioPlaying = audio;
-            audio.play();
-            audio.onended = function() {
-                currentAudioPlaying = null;
-            };
+            if (audioPath) {
+                const audio = new Audio(audioPath);
+                currentAudioPlaying = audio;
+                audio.play();
+                audio.onended = function() {
+                    currentAudioPlaying = null;
+                };
+            }
         }
 
         // Allow Enter key to trigger spelling check

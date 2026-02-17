@@ -28,6 +28,115 @@ recent_sentences = []
 recent_words = []
 MAX_HISTORY = 20
 
+# ================= ROLEPLAY QUESTION POOLS =================
+ROLEPLAY_QUESTIONS = {
+    "teacher": [
+        "What did you learn in school today?",
+        "Can you tell me about your favorite subject?",
+        "Have you completed your homework?",
+        "What is 5 plus 3?",
+        "Can you name three colors?",
+        "What are you reading these days?",
+        "Do you have any questions about your lessons?",
+        "What would you like to learn next?",
+        "Can you tell me one thing you learned this week?",
+        "How can I help you with your studies today?",
+        "What is your favorite book?",
+        "Can you spell the word 'happy'?",
+        "What do you want to be when you grow up?",
+        "Do you enjoy science or math more?",
+        "Can you name the days of the week?"
+    ],
+    "friend": [
+        "What games do you like to play?",
+        "What's your favorite cartoon or movie?",
+        "Do you have any pets?",
+        "What did you do yesterday?",
+        "What's your favorite food?",
+        "Do you want to play together after school?",
+        "What do you like to do on weekends?",
+        "Who is your best friend?",
+        "What's your favorite sport?",
+        "Do you like ice cream or cake more?",
+        "What makes you happy?",
+        "What's your favorite color?",
+        "Do you have any siblings?",
+        "What's the funniest thing that happened to you?",
+        "What do you want to do during vacation?"
+    ],
+    "interviewer": [
+        "Tell me about yourself.",
+        "Why do you want this job?",
+        "What are your strengths?",
+        "Where do you see yourself in 5 years?",
+        "Can you describe a challenging situation you faced?",
+        "What is your biggest achievement?",
+        "Why should we hire you?",
+        "What are your hobbies and interests?",
+        "How do you handle stress?",
+        "What motivates you to work hard?",
+        "Tell me about your education background.",
+        "What skills do you bring to this role?",
+        "How do you work in a team?",
+        "What is your greatest weakness?",
+        "Do you have any questions for us?"
+    ],
+    "viva": [
+        "Can you explain what your project is about?",
+        "Why did you choose this topic?",
+        "What challenges did you face during your project?",
+        "What is the main objective of your work?",
+        "Can you explain this concept in simple terms?",
+        "What did you learn from this project?",
+        "How is your project useful in real life?",
+        "What would you do differently next time?",
+        "Can you explain your methodology?",
+        "What are the future applications of your work?",
+        "How did you solve the main problem in your project?",
+        "What resources did you use for your research?",
+        "Can you explain your results?",
+        "What conclusions did you draw?",
+        "How does your project compare to existing solutions?"
+    ]
+}
+
+# Track recently asked questions per role to avoid repetition
+recent_roleplay_questions = {
+    "teacher": [],
+    "friend": [],
+    "interviewer": [],
+    "viva": []
+}
+
+def get_roleplay_question(roleplay_type):
+    """Get a contextually relevant question for the roleplay type without repetition"""
+    questions = ROLEPLAY_QUESTIONS.get(roleplay_type, ROLEPLAY_QUESTIONS["friend"])
+    recent = recent_roleplay_questions.get(roleplay_type, [])
+    
+    # Filter out recently asked questions
+    available_questions = [q for q in questions if q not in recent]
+    
+    # If all questions have been used, reset but keep last 5
+    if not available_questions:
+        recent_roleplay_questions[roleplay_type] = recent[-5:] if len(recent) > 5 else []
+        available_questions = [q for q in questions if q not in recent_roleplay_questions[roleplay_type]]
+    
+    # If still no available questions, use all
+    if not available_questions:
+        available_questions = questions
+    
+    # Select a random question
+    selected_question = random.choice(available_questions)
+    
+    # Add to recent questions
+    recent_roleplay_questions[roleplay_type].append(selected_question)
+    
+    # Keep only last 10 questions
+    if len(recent_roleplay_questions[roleplay_type]) > 10:
+        recent_roleplay_questions[roleplay_type] = recent_roleplay_questions[roleplay_type][-10:]
+    
+    return selected_question
+
 # ================= TTS CACHE =================
 # Create cache directory
 CACHE_DIR = "static/audio_cache"
@@ -61,32 +170,61 @@ def save_to_cache(text, filepath, slow=False):
         pass
 
 # ================= FEATURE UNLOCK SYSTEM =================
-FEATURE_UNLOCKS = {
-    1: ["conversation"],  # Level 1: Conversation mode unlocked
-    2: ["roleplay"],      # Level 2: Roleplay mode unlocked
-    3: ["repeat"],        # Level 3: Repeat mode unlocked
-    4: ["spellbee"],      # Level 4: Spell Bee mode unlocked
-    5: ["meanings"]       # Level 5: Word Meanings mode unlocked
-}
+# Sequential unlock: each feature requires 50 XP in the previous feature
+FEATURE_SEQUENCE = ["conversation", "roleplay", "repeat", "spellbee", "meanings"]
+XP_PER_UNLOCK = 50
 
-def get_unlocked_features(level):
-    """Get all features unlocked up to the current level"""
-    unlocked = []
-    for lvl in range(1, level + 1):
-        if lvl in FEATURE_UNLOCKS:
-            unlocked.extend(FEATURE_UNLOCKS[lvl])
+def get_unlocked_features(progress_data):
+    """Get all features unlocked based on mode-specific XP"""
+    unlocked = ["conversation"]  # Always unlocked
+    
+    # Check each feature in sequence
+    if progress_data['conversation_xp'] >= XP_PER_UNLOCK:
+        unlocked.append("roleplay")
+    
+    if progress_data['roleplay_xp'] >= XP_PER_UNLOCK:
+        unlocked.append("repeat")
+    
+    if progress_data['repeat_xp'] >= XP_PER_UNLOCK:
+        unlocked.append("spellbee")
+    
+    if progress_data['spellbee_xp'] >= XP_PER_UNLOCK:
+        unlocked.append("meanings")
+    
     return unlocked
 
-def get_next_unlock(level):
-    """Get the next feature that will be unlocked"""
-    next_level = level + 1
-    if next_level in FEATURE_UNLOCKS:
+def get_next_unlock(progress_data):
+    """Get the next feature that will be unlocked and XP needed"""
+    if progress_data['conversation_xp'] < XP_PER_UNLOCK:
         return {
-            'level': next_level,
-            'features': FEATURE_UNLOCKS[next_level],
-            'xp_needed': (next_level - 1) * 100 - session.get('current_xp', 0)
+            'feature': 'roleplay',
+            'current_mode': 'conversation',
+            'xp_needed': XP_PER_UNLOCK - progress_data['conversation_xp'],
+            'current_xp': progress_data['conversation_xp']
         }
-    return None
+    elif progress_data['roleplay_xp'] < XP_PER_UNLOCK:
+        return {
+            'feature': 'repeat',
+            'current_mode': 'roleplay',
+            'xp_needed': XP_PER_UNLOCK - progress_data['roleplay_xp'],
+            'current_xp': progress_data['roleplay_xp']
+        }
+    elif progress_data['repeat_xp'] < XP_PER_UNLOCK:
+        return {
+            'feature': 'spellbee',
+            'current_mode': 'repeat',
+            'xp_needed': XP_PER_UNLOCK - progress_data['repeat_xp'],
+            'current_xp': progress_data['repeat_xp']
+        }
+    elif progress_data['spellbee_xp'] < XP_PER_UNLOCK:
+        return {
+            'feature': 'meanings',
+            'current_mode': 'spellbee',
+            'xp_needed': XP_PER_UNLOCK - progress_data['spellbee_xp'],
+            'current_xp': progress_data['spellbee_xp']
+        }
+    
+    return None  # All features unlocked
 
 # ================= DATABASE SETUP =================
 def init_db():
@@ -117,12 +255,17 @@ def init_db():
         )
     ''')
     
-    # Create student progress table for XP system
+    # Create student progress table with mode-specific XP
     c.execute('''
         CREATE TABLE IF NOT EXISTS student_progress (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             roll_no TEXT UNIQUE NOT NULL,
             xp INTEGER DEFAULT 0,
+            conversation_xp INTEGER DEFAULT 0,
+            roleplay_xp INTEGER DEFAULT 0,
+            repeat_xp INTEGER DEFAULT 0,
+            spellbee_xp INTEGER DEFAULT 0,
+            meanings_xp INTEGER DEFAULT 0,
             total_stars INTEGER DEFAULT 0,
             total_sessions INTEGER DEFAULT 0,
             average_accuracy REAL DEFAULT 0,
@@ -144,6 +287,19 @@ def init_db():
             FOREIGN KEY (roll_no) REFERENCES users (roll_no)
         )
     ''')
+    
+    # Check if we need to add the new columns to existing database
+    c.execute("PRAGMA table_info(student_progress)")
+    columns = [column[1] for column in c.fetchall()]
+    
+    if 'conversation_xp' not in columns:
+        print("Migrating database to add mode-specific XP columns...")
+        c.execute('ALTER TABLE student_progress ADD COLUMN conversation_xp INTEGER DEFAULT 0')
+        c.execute('ALTER TABLE student_progress ADD COLUMN roleplay_xp INTEGER DEFAULT 0')
+        c.execute('ALTER TABLE student_progress ADD COLUMN repeat_xp INTEGER DEFAULT 0')
+        c.execute('ALTER TABLE student_progress ADD COLUMN spellbee_xp INTEGER DEFAULT 0')
+        c.execute('ALTER TABLE student_progress ADD COLUMN meanings_xp INTEGER DEFAULT 0')
+        print("Migration complete!")
     
     conn.commit()
     conn.close()
@@ -273,13 +429,19 @@ Child says:
 
 def roleplay_coach(child_text, roleplay_type):
     global conversation_context
+    
     roles = {
         "teacher": "You are a kind school teacher.\nHelp the student learn English.\nAsk study-related questions.\nBe encouraging and patient.",
         "friend": "You are a friendly classmate.\nTalk casually and happily.\nAsk daily-life questions.\nBe cheerful and supportive.",
         "interviewer": "You are a job interviewer.\nBe polite and professional.\nAsk short interview questions.\nBe encouraging but professional.",
-        "viva": "You are a viva examiner.\nAsk academic project questions.\nFocus on understanding.\nBe fair and encouraging."
+        "viva": "You are a viva examiner.\nBe polite and professional.\nAsk academic project questions.\nFocus on understanding.\nBe fair and encouraging."
     }
+    
     role_instruction = roles.get(roleplay_type, "You are a friendly English speaking partner.")
+    
+    # Get a contextually relevant question for this role
+    suggested_question = get_roleplay_question(roleplay_type)
+    
     prompt = f"""
 {role_instruction}
 
@@ -288,16 +450,20 @@ You are doing roleplay with a student aged 6 to 15.
 STRICT RULES:
 - Always correct the student's sentence
 - Very simple English
-- Stay strictly in your role
+- Stay strictly in your role as {roleplay_type}
 - Encourage the student
-- Ask ONE role-based question
+- Ask ONE role-appropriate question
 - No grammar explanation
+- Make your question relevant to your role
+
+Here's a suggested question for your role (you can use it or create a similar one):
+"{suggested_question}"
 
 Respond ONLY in this format:
 
 CORRECT: <correct sentence>
 PRAISE: <short encouragement>
-QUESTION: <one question>
+QUESTION: <one role-appropriate question>
 
 Conversation so far:
 {conversation_context}
@@ -305,10 +471,11 @@ Conversation so far:
 Student says:
 "{child_text}"
 """
+    
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
+        temperature=0.5
     )
     reply = response.choices[0].message.content.strip()
     conversation_context += f"\nStudent: {child_text}\nAssistant: {reply}"
@@ -687,8 +854,10 @@ def signup():
             conn.execute('INSERT INTO users (role, name, roll_no, password_hash) VALUES (?, ?, ?, ?)',
                         (role, name, roll_no, password_hash))
             
-            # Initialize progress
-            conn.execute('INSERT INTO student_progress (roll_no, xp, total_stars) VALUES (?, 0, 0)',
+            # Initialize progress with mode-specific XP columns
+            conn.execute('''INSERT INTO student_progress 
+                           (roll_no, xp, conversation_xp, roleplay_xp, repeat_xp, spellbee_xp, meanings_xp, total_stars) 
+                           VALUES (?, 0, 0, 0, 0, 0, 0, 0)''',
                         (roll_no,))
         else:  # teacher
             email = data.get("email")
@@ -923,11 +1092,11 @@ def get_meaning():
     
     return jsonify({"word": word, "meaning": meaning, "usage": usage, "type": word_type, "tip": tip, "audio": audio})
 
-# ================= XP SYSTEM ROUTES WITH FEATURE UNLOCKS =================
+# ================= XP SYSTEM ROUTES WITH MODE-SPECIFIC TRACKING =================
 @app.route("/get_student_info")
 @student_required
 def get_student_info():
-    """Get student XP and progress info with unlocked features"""
+    """Get student XP and progress info with mode-specific unlocks"""
     if 'roll_no' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'})
     
@@ -939,9 +1108,16 @@ def get_student_info():
     conn.close()
     
     if student and progress:
-        current_level = (progress['xp'] // 100) + 1
-        unlocked_features = get_unlocked_features(current_level)
-        next_unlock = get_next_unlock(current_level)
+        progress_data = {
+            'conversation_xp': progress['conversation_xp'] or 0,
+            'roleplay_xp': progress['roleplay_xp'] or 0,
+            'repeat_xp': progress['repeat_xp'] or 0,
+            'spellbee_xp': progress['spellbee_xp'] or 0,
+            'meanings_xp': progress['meanings_xp'] or 0
+        }
+        
+        unlocked_features = get_unlocked_features(progress_data)
+        next_unlock = get_next_unlock(progress_data)
         
         return jsonify({
             'success': True,
@@ -949,10 +1125,14 @@ def get_student_info():
                 'name': student['name'],
                 'rollNo': student['roll_no'],
                 'xp': progress['xp'],
+                'conversationXp': progress_data['conversation_xp'],
+                'roleplayXp': progress_data['roleplay_xp'],
+                'repeatXp': progress_data['repeat_xp'],
+                'spellbeeXp': progress_data['spellbee_xp'],
+                'meaningsXp': progress_data['meanings_xp'],
                 'totalStars': progress['total_stars'],
                 'totalSessions': progress['total_sessions'],
                 'averageAccuracy': round(progress['average_accuracy'], 1),
-                'level': current_level,
                 'unlockedFeatures': unlocked_features,
                 'nextUnlock': next_unlock
             }
@@ -963,14 +1143,14 @@ def get_student_info():
 @app.route("/update_xp", methods=["POST"])
 @student_required
 def update_xp():
-    """Update student XP and check for feature unlocks"""
+    """Update student XP with mode-specific tracking for feature unlocks"""
     if 'roll_no' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'})
     
     data = request.json
     roll_no = session['roll_no']
     xp_earned = data.get('xpEarned', 0)
-    mode = data.get('mode', '')
+    mode = data.get('mode', '').lower()  # conversation, roleplay, repeat, spellbee, meanings
     score = data.get('score', 0)
     stars_earned = data.get('starsEarned', 0)
     
@@ -978,18 +1158,31 @@ def update_xp():
     progress = conn.execute('SELECT * FROM student_progress WHERE roll_no = ?', (roll_no,)).fetchone()
     
     if progress:
-        old_xp = progress['xp']
-        new_xp = old_xp + xp_earned
-        old_level = old_xp // 100 + 1
-        new_level = new_xp // 100 + 1
-        leveled_up = new_level > old_level
+        # Get old progress
+        old_progress = {
+            'conversation_xp': progress['conversation_xp'] or 0,
+            'roleplay_xp': progress['roleplay_xp'] or 0,
+            'repeat_xp': progress['repeat_xp'] or 0,
+            'spellbee_xp': progress['spellbee_xp'] or 0,
+            'meanings_xp': progress['meanings_xp'] or 0
+        }
         
-        # Check for new feature unlocks
-        newly_unlocked_features = []
-        if leveled_up:
-            for level in range(old_level + 1, new_level + 1):
-                if level in FEATURE_UNLOCKS:
-                    newly_unlocked_features.extend(FEATURE_UNLOCKS[level])
+        old_unlocked = get_unlocked_features(old_progress)
+        
+        # Update total XP
+        new_total_xp = progress['xp'] + xp_earned
+        
+        # Update mode-specific XP
+        mode_xp_column = f"{mode}_xp"
+        if mode_xp_column in old_progress:
+            new_mode_xp = old_progress[mode_xp_column] + xp_earned
+            old_progress[mode_xp_column] = new_mode_xp
+        else:
+            new_mode_xp = 0
+        
+        # Check for newly unlocked features
+        new_unlocked = get_unlocked_features(old_progress)
+        newly_unlocked_features = [f for f in new_unlocked if f not in old_unlocked]
         
         # Calculate new average accuracy
         old_avg = progress['average_accuracy']
@@ -1001,15 +1194,18 @@ def update_xp():
             new_avg = ((old_avg * total_sessions) + score) / (total_sessions + 1)
         
         # Update progress
-        conn.execute('''
+        update_query = f'''
             UPDATE student_progress 
             SET xp = ?, 
+                {mode_xp_column} = ?,
                 total_stars = total_stars + ?, 
                 total_sessions = total_sessions + 1, 
                 average_accuracy = ?,
                 last_active = ?
             WHERE roll_no = ?
-        ''', (new_xp, stars_earned, new_avg, datetime.now(), roll_no))
+        '''
+        
+        conn.execute(update_query, (new_total_xp, new_mode_xp, stars_earned, new_avg, datetime.now(), roll_no))
         
         # Log activity
         conn.execute('''
@@ -1020,17 +1216,16 @@ def update_xp():
         conn.commit()
         conn.close()
         
-        # Get all unlocked features and next unlock info
-        unlocked_features = get_unlocked_features(new_level)
-        next_unlock = get_next_unlock(new_level)
+        # Get next unlock info
+        next_unlock = get_next_unlock(old_progress)
         
         return jsonify({
             'success': True, 
-            'newXP': new_xp, 
-            'newLevel': new_level, 
-            'leveledUp': leveled_up,
+            'newXP': new_total_xp,
+            'newModeXP': new_mode_xp,
+            'mode': mode,
             'newlyUnlockedFeatures': newly_unlocked_features,
-            'unlockedFeatures': unlocked_features,
+            'unlockedFeatures': new_unlocked,
             'nextUnlock': next_unlock,
             'averageAccuracy': round(new_avg, 1)
         })
@@ -1067,8 +1262,9 @@ def get_all_students():
     conn = get_db_connection()
     
     students = conn.execute('''
-        SELECT u.name, u.roll_no, sp.xp, sp.total_stars, 
-               sp.total_sessions, sp.average_accuracy, sp.last_active
+        SELECT u.name, u.roll_no, sp.xp, sp.conversation_xp, sp.roleplay_xp, 
+               sp.repeat_xp, sp.spellbee_xp, sp.meanings_xp,
+               sp.total_stars, sp.total_sessions, sp.average_accuracy, sp.last_active
         FROM users u
         LEFT JOIN student_progress sp ON u.roll_no = sp.roll_no
         WHERE u.role = 'student'
@@ -1079,15 +1275,30 @@ def get_all_students():
     
     students_list = []
     for student in students:
+        progress_data = {
+            'conversation_xp': student['conversation_xp'] or 0,
+            'roleplay_xp': student['roleplay_xp'] or 0,
+            'repeat_xp': student['repeat_xp'] or 0,
+            'spellbee_xp': student['spellbee_xp'] or 0,
+            'meanings_xp': student['meanings_xp'] or 0
+        }
+        
+        unlocked_features = get_unlocked_features(progress_data)
+        
         students_list.append({
             'name': student['name'],
             'rollNo': student['roll_no'],
             'xp': student['xp'] or 0,
-            'level': ((student['xp'] or 0) // 100) + 1,
+            'conversationXp': progress_data['conversation_xp'],
+            'roleplayXp': progress_data['roleplay_xp'],
+            'repeatXp': progress_data['repeat_xp'],
+            'spellbeeXp': progress_data['spellbee_xp'],
+            'meaningsXp': progress_data['meanings_xp'],
             'totalStars': student['total_stars'] or 0,
             'totalSessions': student['total_sessions'] or 0,
             'averageAccuracy': round(student['average_accuracy'] or 0, 1),
-            'lastActive': student['last_active']
+            'lastActive': student['last_active'],
+            'unlockedFeatures': unlocked_features
         })
     
     return jsonify({'success': True, 'students': students_list})
@@ -1099,8 +1310,9 @@ def get_student_details(roll_no):
     conn = get_db_connection()
     
     student = conn.execute('''
-        SELECT u.name, u.roll_no, sp.xp, sp.total_stars, 
-               sp.total_sessions, sp.average_accuracy, sp.last_active
+        SELECT u.name, u.roll_no, sp.xp, sp.conversation_xp, sp.roleplay_xp, 
+               sp.repeat_xp, sp.spellbee_xp, sp.meanings_xp,
+               sp.total_stars, sp.total_sessions, sp.average_accuracy, sp.last_active
         FROM users u
         LEFT JOIN student_progress sp ON u.roll_no = sp.roll_no
         WHERE u.roll_no = ? AND u.role = 'student'
@@ -1130,25 +1342,36 @@ def get_student_details(roll_no):
             'starsEarned': activity['stars_earned']
         })
     
-    current_level = ((student['xp'] or 0) // 100) + 1
-    unlocked_features = get_unlocked_features(current_level)
+    progress_data = {
+        'conversation_xp': student['conversation_xp'] or 0,
+        'roleplay_xp': student['roleplay_xp'] or 0,
+        'repeat_xp': student['repeat_xp'] or 0,
+        'spellbee_xp': student['spellbee_xp'] or 0,
+        'meanings_xp': student['meanings_xp'] or 0
+    }
+    
+    unlocked_features = get_unlocked_features(progress_data)
+    next_unlock = get_next_unlock(progress_data)
     
     student_data = {
         'name': student['name'],
         'rollNo': student['roll_no'],
         'xp': student['xp'] or 0,
-        'level': current_level,
+        'conversationXp': progress_data['conversation_xp'],
+        'roleplayXp': progress_data['roleplay_xp'],
+        'repeatXp': progress_data['repeat_xp'],
+        'spellbeeXp': progress_data['spellbee_xp'],
+        'meaningsXp': progress_data['meanings_xp'],
         'totalStars': student['total_stars'] or 0,
         'totalSessions': student['total_sessions'] or 0,
         'averageAccuracy': round(student['average_accuracy'] or 0, 1),
         'lastActive': student['last_active'],
         'unlockedFeatures': unlocked_features,
+        'nextUnlock': next_unlock,
         'activityLog': activity_list
     }
     
     return jsonify({'success': True, 'student': student_data})
 
-import os
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    app.run(debug=True)
