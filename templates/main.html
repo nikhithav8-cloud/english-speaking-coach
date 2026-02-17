@@ -946,7 +946,6 @@
             width: 10px;
             height: 10px;
             background: #f39c12;
-            position: absolute;
             animation: confetti-fall 3s linear forwards;
         }
 
@@ -1466,7 +1465,8 @@
                 <div class="setting-group">
                     <label><span class="category-icon">📚</span>Choose Category:</label>
                     <select id="categorySelect">
-                        <option value="general">🌟 General</option>
+                        <!-- CHANGED: "general" replaced with "civic_sense" -->
+                        <option value="civic_sense">🏛️ Civic Sense</option>
                         <option value="animals">🐶 Animals</option>
                         <option value="food">🍕 Food</option>
                         <option value="sports">⚽ Sports</option>
@@ -1709,15 +1709,13 @@
         };
 
         // ========== FEATURE UNLOCK SYSTEM ==========
-        let unlockedFeatures = ['conversation'];  // Default unlock
+        let unlockedFeatures = ['conversation'];
         const XP_PER_UNLOCK = 50;
 
-        // Check if a feature is unlocked
         function isFeatureUnlocked(feature) {
             return unlockedFeatures.includes(feature);
         }
 
-        // Get feature display name
         function getFeatureDisplayName(feature) {
             const names = {
                 'conversation': 'Conversation Mode',
@@ -1729,7 +1727,6 @@
             return names[feature] || feature;
         }
 
-        // Update UI based on unlocked features
         function updateFeatureUI() {
             const modeBtns = document.querySelectorAll('.mode-btn');
             
@@ -1739,20 +1736,17 @@
                 if (isFeatureUnlocked(mode)) {
                     btn.disabled = false;
                     btn.classList.remove('locked');
-                    // Remove lock icon if present
                     const text = btn.textContent.replace('🔒 ', '');
                     btn.innerHTML = text;
                 } else {
                     btn.disabled = true;
                     btn.classList.add('locked');
-                    // Add lock icon if not present
                     if (!btn.textContent.includes('🔒')) {
                         btn.innerHTML = '🔒 ' + btn.textContent;
                     }
                 }
             });
 
-            // Update mode XP cards
             const modeCards = document.querySelectorAll('.mode-xp-card');
             modeCards.forEach(card => {
                 const mode = card.getAttribute('data-mode');
@@ -1764,7 +1758,6 @@
             });
         }
 
-        // Show next unlock info
         function showNextUnlockInfo(nextUnlock) {
             const nextUnlockDiv = document.getElementById('nextUnlockInfo');
             if (nextUnlockDiv && nextUnlock) {
@@ -1785,18 +1778,15 @@
             }
         }
 
-        // ========== LOAD STUDENT INFO ON PAGE LOAD ==========
         window.addEventListener('DOMContentLoaded', function() {
             loadStudentInfo();
         });
 
-        // ========== CAPITALIZE FIRST LETTER FUNCTION ==========
         function capitalizeFirstLetter(str) {
             if (!str) return str;
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
 
-        // ========== XP SYSTEM FUNCTIONS - MODE-SPECIFIC ==========
         async function loadStudentInfo() {
             try {
                 const response = await fetch('/get_student_info');
@@ -1808,7 +1798,6 @@
                     studentRollNo = data.student.rollNo || '';
                     unlockedFeatures = data.student.unlockedFeatures || ['conversation'];
                     
-                    // Load mode-specific XP
                     modeXP.conversation = data.student.conversationXp || 0;
                     modeXP.roleplay = data.student.roleplayXp || 0;
                     modeXP.repeat = data.student.repeatXp || 0;
@@ -1818,11 +1807,10 @@
                     updateXPDisplay();
                     updateFeatureUI();
                     
-                    // Show next unlock notification
                     if (data.student.nextUnlock) {
                         showNextUnlockInfo(data.student.nextUnlock);
                     } else {
-                        showNextUnlockInfo(null); // All unlocked
+                        showNextUnlockInfo(null);
                     }
                 }
             } catch (error) {
@@ -1845,7 +1833,6 @@
                 xpAmount.textContent = `${studentXP} XP Total`;
             }
             
-            // Update mode-specific XP displays
             updateModeXPDisplay('conversation', modeXP.conversation);
             updateModeXPDisplay('roleplay', modeXP.roleplay);
             updateModeXPDisplay('repeat', modeXP.repeat);
@@ -1894,18 +1881,16 @@
                     updateXPDisplay();
                     updateFeatureUI();
                     
-                    // Show unlock notification if new features were unlocked
                     if (data.newlyUnlockedFeatures && data.newlyUnlockedFeatures.length > 0) {
                         setTimeout(() => {
                             showFeatureUnlockAnimation(data.newlyUnlockedFeatures);
                         }, 500);
                     }
                     
-                    // Update next unlock info
                     if (data.nextUnlock) {
                         showNextUnlockInfo(data.nextUnlock);
                     } else {
-                        showNextUnlockInfo(null); // All unlocked
+                        showNextUnlockInfo(null);
                     }
                 }
             } catch (error) {
@@ -1945,16 +1930,13 @@
             }, 4000);
         }
 
-        // Exit to home function
         function exitToHome() {
             stopAllMicAndAudio();
-            
             if (confirm('Are you sure you want to exit to the home page?')) {
                 window.location.href = '/dashboard';
             }
         }
 
-        // Check if browser supports speech recognition
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
@@ -1964,7 +1946,6 @@
             alert('Your browser does not support speech recognition. Please use Chrome.');
         }
 
-        // Function to stop all microphones and audio
         function stopAllMicAndAudio() {
             try {
                 recognition.stop();
@@ -1996,7 +1977,6 @@
             });
         }
 
-        // Confetti effect
         function createConfetti() {
             const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f39c12', '#e74c3c'];
             for (let i = 0; i < 50; i++) {
@@ -2012,9 +1992,7 @@
             }
         }
 
-        // Switch between modes
         function switchMode(mode) {
-            // Check if mode is unlocked
             if (!isFeatureUnlocked(mode)) {
                 const featureName = getFeatureDisplayName(mode);
                 alert(`🔒 ${featureName} is locked!\n\nComplete challenges in the current mode to unlock it.`);
@@ -2122,6 +2100,7 @@
                         currentAudioPlaying = null;
                         awardXP(5, 'conversation', 100, 1);
                         
+                        // Auto-reactivate mic after AI responds
                         if (autoReactivate && currentMode === 'conversation') {
                             setTimeout(() => {
                                 startRecording();
@@ -2201,6 +2180,7 @@
                         currentAudioPlaying = null;
                         awardXP(8, 'roleplay', 100, 1);
                         
+                        // Auto-reactivate mic after AI responds
                         if (autoReactivate && currentMode === 'roleplay') {
                             setTimeout(() => {
                                 startRoleplayRecording();
@@ -2815,7 +2795,6 @@
             }
         }
 
-        // Allow Enter key to trigger spelling check
         document.addEventListener('DOMContentLoaded', function() {
             const spellingInput = document.getElementById('spellingInput');
             if (spellingInput) {
@@ -2827,7 +2806,6 @@
             }
         });
 
-        // Make mascot interactive
         document.querySelector('.mascot').addEventListener('click', function() {
             this.style.animation = 'none';
             setTimeout(() => {
