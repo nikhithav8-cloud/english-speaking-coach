@@ -3,624 +3,1065 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Gayathri Speak Smart</title>
+    <title>Gayathri Speak Smart – Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --purple: #667eea;
+            --purple-dark: #764ba2;
+            --green: #00b894;
+            --teal: #00cec9;
+            --white: #ffffff;
+            --bg: #f0f2ff;
+            --card: #ffffff;
+            --text: #2d3436;
+            --muted: #636e72;
+            --border: #e0e4ff;
         }
 
         body {
-            font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #6b6fc5 0%, #7b5ea7 40%, #9b6bbf 70%, #b07fd4 100%);
             min-height: 100vh;
             display: flex;
+            align-items: flex-start;
             justify-content: center;
-            align-items: center;
             padding: 20px;
             position: relative;
+            overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* Animated Background */
-        .bg-decoration {
-            position: fixed;
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 20s infinite ease-in-out;
-            pointer-events: none;
+        /* ── Blobs ── */
+        .bg-blob { position:fixed; border-radius:50%; pointer-events:none; animation:blobFloat 18s ease-in-out infinite; }
+        .blob1 { width:520px;height:520px;background:rgba(255,255,255,.07);bottom:-180px;right:-160px;animation-delay:0s; }
+        .blob2 { width:380px;height:380px;background:rgba(255,255,255,.07);top:-120px;left:-120px;animation-delay:6s; }
+        .blob3 { width:180px;height:180px;background:rgba(255,255,255,.06);top:45%;right:5%;animation-delay:10s; }
+        .blob4 { width:120px;height:120px;background:rgba(255,255,255,.05);bottom:15%;left:6%;animation-delay:3s; }
+        @keyframes blobFloat { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-30px) scale(1.05);} }
+
+        /* ── Stars ── */
+        .deco-star { position:fixed; pointer-events:none; color:rgba(255,255,255,.5); animation:starTwinkle 4s ease-in-out infinite; }
+        @keyframes starTwinkle { 0%,100%{opacity:.25;transform:scale(1) rotate(0deg);} 50%{opacity:.6;transform:scale(1.25) rotate(20deg);} }
+
+        /* ── Card ── */
+        .card {
+            background:var(--card); border-radius:30px; padding:36px 40px 32px;
+            width:100%; max-width:460px;
+            box-shadow:0 24px 80px rgba(102,126,234,.18),0 4px 16px rgba(0,0,0,.06);
+            position:relative; z-index:10;
+            animation:cardPop .6s cubic-bezier(.34,1.56,.64,1) both;
+            margin: auto 0;
+            align-self: center;
+        }
+        @media (max-height: 700px) {
+            body { align-items: flex-start; }
+            .card { margin: 0 auto; }
+        }
+        @keyframes cardPop { from{transform:scale(.88) translateY(24px);opacity:0;} to{transform:scale(1) translateY(0);opacity:1;} }
+
+        /* ── Header ── */
+        .header { text-align:center; margin-bottom:20px; }
+        .mascot-wrap {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:70px; height:70px;
+            background:linear-gradient(135deg,var(--purple),var(--purple-dark));
+            border-radius:24px; font-size:38px; margin-bottom:10px;
+            box-shadow:0 10px 30px rgba(102,126,234,.4);
+            animation:owlBounce 2.4s ease-in-out infinite;
+        }
+        @keyframes owlBounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+        .app-title {
+            font-family:'Fredoka One',cursive; font-size:24px;
+            background:linear-gradient(135deg,var(--purple),var(--purple-dark));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+        }
+        .app-sub { color:var(--muted); font-size:13px; font-weight:600; margin-top:3px; }
+
+        /* ── Role tabs ── */
+        .role-tabs { display:flex; background:var(--bg); border-radius:14px; padding:5px; margin-bottom:20px; gap:4px; }
+        .role-tab {
+            flex:1; padding:10px; border:none; border-radius:10px; background:transparent;
+            font-family:'Nunito',sans-serif; font-size:15px; font-weight:700;
+            color:var(--muted); cursor:pointer; transition:all .25s;
+        }
+        .role-tab.active { background:white; color:var(--purple-dark); box-shadow:0 4px 12px rgba(102,126,234,.2); }
+
+        /* ── Panels ── */
+        .panel { display:none; animation:fadeSlide .35s ease both; }
+        .panel.active { display:block; }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+        /* ── Form elements ── */
+        .form-group { margin-bottom:13px; }
+        .form-label {
+            display:block; font-size:11px; font-weight:800; color:var(--text);
+            margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;
+        }
+        .input-wrap { position:relative; display:flex; align-items:center; }
+        .input-icon { position:absolute; left:14px; font-size:16px; pointer-events:none; }
+        .form-input {
+            width:100%; padding:11px 14px 11px 42px;
+            border:2.5px solid var(--border); border-radius:12px;
+            font-family:'Nunito',sans-serif; font-size:14px; font-weight:600;
+            color:var(--text); background:var(--bg); outline:none; transition:all .2s;
+        }
+        .form-input:focus { border-color:var(--purple); background:white; box-shadow:0 0 0 4px rgba(102,126,234,.12); }
+        .form-input::placeholder { color:#b2bec3; font-weight:600; }
+
+        /* User ID input — monospace + uppercase */
+        .uid-input {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--purple-dark);
         }
 
-        .circle1 {
-            width: 500px;
-            height: 500px;
-            background: white;
-            top: -200px;
-            left: -200px;
+        /* Select arrow */
+        select.form-input {
+            cursor:pointer;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath fill='%23667eea' d='M.5.5l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat:no-repeat; background-position:right 14px center;
+            -webkit-appearance:none; appearance:none;
         }
 
-        .circle2 {
-            width: 400px;
-            height: 400px;
-            background: white;
-            bottom: -150px;
-            right: -150px;
-            animation-delay: 8s;
-        }
+        /* ── Two-column grid ── */
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(20px, -30px) rotate(120deg); }
-            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        /* ── Buttons ── */
+        .btn {
+            width:100%; padding:13px; border:none; border-radius:14px;
+            font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
+            cursor:pointer; transition:all .25s; position:relative; overflow:hidden;
         }
+        .btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:background .2s; }
+        .btn:hover::after { background:rgba(255,255,255,.12); }
+        .btn:active { transform:scale(.97); }
+        .btn:disabled { opacity:.65; cursor:not-allowed; transform:none !important; }
 
-        /* Stars */
-        .star {
-            position: fixed;
-            font-size: 25px;
-            opacity: 0.3;
-            animation: twinkle 3s infinite;
+        .btn-primary { background:linear-gradient(135deg,var(--purple),var(--purple-dark)); color:white; box-shadow:0 8px 24px rgba(102,126,234,.4); margin-top:4px; }
+        .btn-primary:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 12px 30px rgba(102,126,234,.5); }
+
+        .btn-green { background:linear-gradient(135deg,var(--green),var(--teal)); color:white; box-shadow:0 8px 24px rgba(0,184,148,.35); margin-top:4px; }
+        .btn-green:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,184,148,.45); }
+
+        .btn-outline { background:transparent; color:var(--purple); border:2.5px solid var(--border); font-size:14px; padding:11px; margin-top:4px; }
+        .btn-outline:hover { border-color:var(--purple); background:rgba(102,126,234,.06); }
+
+        /* ── Forgot link ── */
+        .forgot-link {
+            display:block; text-align:right; font-size:13px; font-weight:700;
+            color:var(--purple); cursor:pointer; margin-top:-4px; margin-bottom:12px; transition:color .2s;
         }
+        .forgot-link:hover { color:var(--purple-dark); text-decoration:underline; }
 
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.25; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.2); }
+        /* ── Alerts ── */
+        .alert {
+            padding:11px 14px; border-radius:12px; font-size:13px; font-weight:700;
+            margin-bottom:13px; display:none; align-items:center; gap:10px;
+            animation:fadeSlide .3s ease both;
         }
+        .alert.show { display:flex; }
+        .alert-success { background:#d4f5ee; color:#00796b; border:2px solid #80cbc4; }
+        .alert-error   { background:#fde8e8; color:#c0392b; border:2px solid #f5a5a5; }
 
-        /* Container */
-        .login-container {
-            background: white;
-            border-radius: 40px;
-            padding: 50px 45px;
-            max-width: 450px;
-            width: 100%;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 10;
-            animation: slideUp 0.8s ease-out;
+        /* ── Divider ── */
+        .divider { display:flex; align-items:center; gap:12px; margin:14px 0 10px; color:var(--muted); font-size:13px; font-weight:700; }
+        .divider::before,.divider::after { content:''; flex:1; height:2px; background:var(--border); border-radius:1px; }
+
+        /* ── Info note ── */
+        .info-note {
+            background:linear-gradient(135deg,#f0eeff,#e8f4fd);
+            border:2px solid #c5b8fe; border-radius:12px;
+            padding:10px 13px; margin-bottom:13px;
+            font-size:12px; color:#4a4a8a; line-height:1.5; font-weight:600;
         }
+        .info-note strong { color:var(--purple); }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Mascot */
-        .mascot {
-            font-size: 80px;
+        /* ── User ID reveal box (shown after signup) ── */
+        .uid-reveal {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            padding: 18px 20px;
             text-align: center;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
+            margin-bottom: 14px;
+            display: none;
+            animation: fadeSlide .4s ease both;
         }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        /* Title */
-        h1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 36px;
-            text-align: center;
-            margin-bottom: 10px;
-            font-weight: 900;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 35px;
-            font-size: 16px;
-        }
-
-        /* Role Selection */
-        .role-selector {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .role-btn {
-            flex: 1;
-            padding: 20px;
-            border: 3px solid #e0e0e0;
-            background: white;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .role-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .role-btn.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .role-icon {
-            font-size: 40px;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .role-name {
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        /* Form */
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 15px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 15px;
-            font-size: 16px;
-            transition: all 0.3s;
+        .uid-reveal.show { display: block; }
+        .uid-reveal-label { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .uid-reveal-code  { font-family: 'Courier New', monospace; font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 6px; margin-bottom: 10px; text-shadow: 0 2px 12px rgba(0,0,0,.3); }
+        .uid-reveal-note  { font-size: 12px; color: rgba(255,255,255,.8); font-weight: 600; line-height: 1.5; }
+        .uid-copy-btn {
+            background: rgba(255,255,255,.2); color: white; border: 2px solid rgba(255,255,255,.4);
+            border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 800;
+            cursor: pointer; margin-top: 10px; transition: background .2s;
             font-family: 'Nunito', sans-serif;
         }
+        .uid-copy-btn:hover { background: rgba(255,255,255,.35); }
 
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        /* ── Password strength ── */
+        .pw-strength-bar { height:5px; border-radius:3px; background:var(--border); margin-top:7px; overflow:hidden; }
+        .pw-strength-fill { height:100%; border-radius:3px; width:0%; transition:width .4s,background .4s; }
+        .pw-strength-label { font-size:12px; font-weight:700; margin-top:3px; height:16px; }
+
+        /* ── Spinner ── */
+        .spinner {
+            display:inline-block; width:17px; height:17px;
+            border:3px solid rgba(255,255,255,.4); border-top-color:white;
+            border-radius:50%; animation:spin .7s linear infinite;
+            vertical-align:middle; margin-right:8px;
+        }
+        @keyframes spin { to{transform:rotate(360deg);} }
+
+        /* ── Forgot Password Modal ── */
+        .modal-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(20,20,40,.6); z-index:1000;
+            backdrop-filter:blur(6px);
+            align-items:center; justify-content:center; padding:20px;
+            overflow-y: auto;
+        }
+        .modal-overlay.open { display:flex; }
+        .modal-box {
+            background:white; border-radius:28px; padding:34px 30px;
+            width:100%; max-width:440px;
+            box-shadow:0 30px 80px rgba(0,0,0,.3);
+            animation:cardPop .4s cubic-bezier(.34,1.56,.64,1) both;
+            position:relative;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            margin: auto;
+        }
+        .modal-close {
+            position:absolute; top:14px; right:16px;
+            width:34px; height:34px; border-radius:50%; border:none;
+            background:#f5f5f5; font-size:18px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; transition:background .2s;
+        }
+        .modal-close:hover { background:#ffe0e0; }
+        .modal-icon  { text-align:center; font-size:48px; margin-bottom:8px; }
+        .modal-title { font-family:'Fredoka One',cursive; font-size:21px; color:var(--purple-dark); text-align:center; margin-bottom:5px; }
+        .modal-desc  { text-align:center; color:var(--muted); font-size:13px; font-weight:600; margin-bottom:18px; line-height:1.5; }
+
+        /* ── Step dots ── */
+        .steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:18px; }
+        .step-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:all .3s; }
+        .step-dot.active { background:var(--purple); transform:scale(1.3); }
+        .step-dot.done   { background:var(--green); }
+        .step-panel { display:none; }
+        .step-panel.active { display:block; animation:fadeSlide .3s ease both; }
+
+        /* ── Section divider inside modal ── */
+        .modal-section-label {
+            font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.8px;
+            color:var(--purple); background:linear-gradient(135deg,#f0eeff,#e8f4fd);
+            border:1.5px solid #c5b8fe; border-radius:8px;
+            padding:6px 12px; margin:14px 0 10px; display:flex; align-items:center; gap:6px;
         }
 
-        .input-hint {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
+        /* ── Success ── */
+        .success-check { text-align:center; padding:8px 0 16px; }
+        .check-circle {
+            width:80px; height:80px; border-radius:50%;
+            background:linear-gradient(135deg,var(--green),var(--teal));
+            display:inline-flex; align-items:center; justify-content:center;
+            font-size:38px; margin-bottom:14px;
+            box-shadow:0 10px 30px rgba(0,184,148,.4);
+            animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;
         }
+        @keyframes popIn { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+        .success-title { font-family:'Fredoka One',cursive; font-size:22px; color:var(--green); margin-bottom:8px; }
+        .success-msg   { color:var(--muted); font-size:14px; font-weight:600; line-height:1.5; }
 
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
+        /* ── RESPONSIVE ── */
+        @media(max-width:480px) {
+            body { padding: 12px; }
+            .card { padding:28px 16px 24px; border-radius:22px; }
+            .modal-box { padding:26px 16px; }
+            .two-col { grid-template-columns:1fr; }
+            .app-title { font-size:22px; }
         }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-            margin-bottom: 15px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #2d3436;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
-        }
-
-        /* Alert Messages */
-        .alert {
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            display: none;
-            animation: slideDown 0.4s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 2px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 2px solid #f5c6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 2px solid #bee5eb;
-        }
-
-        /* Toggle Forms */
-        .form-toggle {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .form-toggle a {
-            color: #667eea;
-            font-weight: 700;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .form-toggle a:hover {
-            text-decoration: underline;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 40px 30px;
-            }
-
-            h1 {
-                font-size: 30px;
-            }
-
-            .mascot {
-                font-size: 65px;
-            }
+        @media(max-height:600px) {
+            body { padding: 10px; align-items: flex-start; }
+            .card { padding: 20px 24px 18px; }
+            .mascot-wrap { width:52px; height:52px; font-size:28px; margin-bottom:6px; }
+            .app-title { font-size:20px; }
+            .app-sub { display:none; }
+            .header { margin-bottom:12px; }
+            .role-tabs { margin-bottom:14px; }
+            .form-group { margin-bottom:9px; }
+            .form-input { padding:9px 12px 9px 38px; font-size:13px; }
+            .divider { margin:10px 0 8px; }
+            .btn { padding:11px; font-size:14px; }
         }
     </style>
 </head>
 <body>
-    <!-- Background -->
-    <div class="bg-decoration circle1"></div>
-    <div class="bg-decoration circle2"></div>
-    
-    <!-- Stars -->
-    <div class="star" style="top: 10%; left: 15%;">⭐</div>
-    <div class="star" style="top: 15%; right: 10%;">✨</div>
-    <div class="star" style="bottom: 15%; left: 10%;">🌟</div>
-    <div class="star" style="top: 60%; right: 20%;">💫</div>
 
-    <!-- Login Container -->
-    <div class="login-container">
-        <div class="mascot">🦉</div>
-        <h1>Welcome Back!</h1>
-        <p class="subtitle">Let's continue your English journey</p>
+<!-- Background -->
+<div class="bg-blob blob1"></div>
+<div class="bg-blob blob2"></div>
+<div class="bg-blob blob3"></div>
+<div class="bg-blob blob4"></div>
+<div class="deco-star" style="top:12%;left:18%;font-size:20px;animation-delay:0s;">★</div>
+<div class="deco-star" style="top:8%;right:22%;font-size:16px;animation-delay:1s;">✦</div>
+<div class="deco-star" style="bottom:20%;left:15%;font-size:24px;animation-delay:2s;">★</div>
+<div class="deco-star" style="bottom:30%;right:18%;font-size:14px;animation-delay:.5s;">✦</div>
+<div class="deco-star" style="top:50%;left:8%;font-size:18px;animation-delay:1.8s;">✧</div>
+<div class="deco-star" style="top:35%;right:8%;font-size:28px;animation-delay:3s;">⌒</div>
 
-        <!-- Alert Messages -->
-        <div id="alertBox" class="alert"></div>
-
-        <!-- Role Selection -->
-        <div class="role-selector" id="roleSelector">
-            <div class="role-btn active" onclick="selectRole('student')">
-                <span class="role-icon">👨‍🎓</span>
-                <span class="role-name">Student</span>
-            </div>
-            <div class="role-btn" onclick="selectRole('teacher')">
-                <span class="role-icon">👩‍🏫</span>
-                <span class="role-name">Teacher</span>
-            </div>
-        </div>
-
-        <!-- Login Form -->
-        <form id="loginForm">
-            <div class="form-group" id="rollNoGroup">
-                <label for="loginRollNo">Roll Number</label>
-                <input type="text" id="loginRollNo" placeholder="Enter your roll number (e.g., 001)" required>
-                <div class="input-hint">Your 3-digit roll number</div>
-            </div>
-
-            <div class="form-group hidden" id="emailGroup">
-                <label for="loginEmail">Email</label>
-                <input type="email" id="loginEmail" placeholder="Enter your email">
-                <div class="input-hint">Your registered email address</div>
-            </div>
-
-            <div class="form-group">
-                <label for="loginPassword">Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter your password" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">🚀 Login</button>
-            <button type="button" class="btn btn-secondary" onclick="showSignup()">✨ New User? Sign Up</button>
-        </form>
-
-        <!-- Signup Form (Hidden by default) -->
-        <form id="signupForm" class="hidden">
-            <div class="form-group">
-                <label for="signupName">Full Name</label>
-                <input type="text" id="signupName" placeholder="Enter your full name" required>
-            </div>
-
-            <div class="form-group" id="signupRollNoGroup">
-                <label for="signupRollNo">Roll Number</label>
-                <input type="text" id="signupRollNo" placeholder="Enter roll number (e.g., 001)" required>
-                <div class="input-hint">Use 3 digits: 001, 002, 003, etc.</div>
-            </div>
-
-            <div class="form-group hidden" id="signupEmailGroup">
-                <label for="signupEmail">Email</label>
-                <input type="email" id="signupEmail" placeholder="Enter your email">
-                <div class="input-hint">Your professional email address</div>
-            </div>
-
-            <div class="form-group">
-                <label for="signupPassword">Password</label>
-                <input type="password" id="signupPassword" placeholder="Create a password" required>
-            </div>
-
-            <div class="form-group">
-                <label for="signupConfirmPassword">Confirm Password</label>
-                <input type="password" id="signupConfirmPassword" placeholder="Re-enter your password" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">📝 Sign Up</button>
-            <button type="button" class="btn btn-secondary" onclick="showLogin()">🔙 Back to Login</button>
-        </form>
+<!-- ===================== MAIN CARD ===================== -->
+<div class="card">
+    <div class="header">
+        <div class="mascot-wrap">🦉</div>
+        <div class="app-title">Gayathri Speak Smart</div>
+        <div class="app-sub">✨ Learn English the fun way!</div>
     </div>
 
-    <script>
-        let selectedRole = 'student';
+    <!-- Role tabs -->
+    <div class="role-tabs">
+        <button class="role-tab active" onclick="switchRole('student', this)">🎒 Student</button>
+        <button class="role-tab"        onclick="switchRole('teacher', this)">👩‍🏫 Teacher</button>
+    </div>
 
-        // Show alert message
-        function showAlert(message, type) {
-            const alertBox = document.getElementById('alertBox');
-            alertBox.textContent = message;
-            alertBox.className = `alert alert-${type}`;
-            alertBox.style.display = 'block';
-            
-            setTimeout(() => {
-                alertBox.style.display = 'none';
-            }, 4000);
-        }
+    <!-- ══════════ STUDENT PANEL ══════════ -->
+    <div class="panel active" id="studentPanel">
 
-        // Capitalize first letter of each word in name
-        function capitalizeName(name) {
-            if (!name) return 'User';
-            return name
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-        }
+        <!-- Student Login -->
+        <div id="studentLogin">
+            <div class="alert alert-error" id="studentLoginError">
+                <span>⚠️</span><span id="studentLoginErrorMsg"></span>
+            </div>
 
-        // Select role (student or teacher)
-        function selectRole(role) {
-            selectedRole = role;
-            
-            // Update button states
-            document.querySelectorAll('.role-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.closest('.role-btn').classList.add('active');
-            
-            // Show/hide appropriate fields
-            if (role === 'student') {
-                document.getElementById('rollNoGroup').classList.remove('hidden');
-                document.getElementById('emailGroup').classList.add('hidden');
-                document.getElementById('loginEmail').required = false;
-                document.getElementById('loginRollNo').required = true;
-            } else {
-                document.getElementById('rollNoGroup').classList.add('hidden');
-                document.getElementById('emailGroup').classList.remove('hidden');
-                document.getElementById('loginEmail').required = true;
-                document.getElementById('loginRollNo').required = false;
-            }
-        }
+            <div class="info-note">
+                🪪 Use your <strong>User ID</strong> (given when you registered, e.g. <strong>GSS-A3K7P</strong>) and your <strong>password</strong> to log in.
+            </div>
 
-        // Toggle between login and signup
-        function showSignup() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('signupForm').classList.remove('hidden');
-            document.getElementById('roleSelector').style.display = 'flex';
-            document.querySelector('h1').textContent = 'Create Account';
-            document.querySelector('.subtitle').textContent = 'Join us and start learning!';
-            
-            // Update signup form based on role
-            if (selectedRole === 'student') {
-                document.getElementById('signupRollNoGroup').classList.remove('hidden');
-                document.getElementById('signupEmailGroup').classList.add('hidden');
-                document.getElementById('signupEmail').required = false;
-                document.getElementById('signupRollNo').required = true;
-            } else {
-                document.getElementById('signupRollNoGroup').classList.add('hidden');
-                document.getElementById('signupEmailGroup').classList.remove('hidden');
-                document.getElementById('signupEmail').required = true;
-                document.getElementById('signupRollNo').required = false;
-            }
-        }
+            <div class="form-group">
+                <label class="form-label">User ID</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🪪</span>
+                    <input type="text" class="form-input uid-input" id="studentUserIdCode"
+                           placeholder="GSS-XXXXX" maxlength="9" autocomplete="off"
+                           oninput="this.value=this.value.toUpperCase()">
+                </div>
+            </div>
 
-        function showLogin() {
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('roleSelector').style.display = 'flex';
-            document.querySelector('h1').textContent = 'Welcome Back!';
-            document.querySelector('.subtitle').textContent = "Let's continue your English journey";
-        }
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" class="form-input" id="studentPassword" placeholder="Enter password"
+                           autocomplete="current-password"
+                           onkeypress="if(event.key==='Enter') loginStudent()">
+                </div>
+            </div>
 
-        // Format roll number (ensure 3 digits with leading zeros)
-        function formatRollNo(rollNo) {
-            return rollNo.padStart(3, '0');
-        }
+            <a class="forgot-link" onclick="openForgotModal()">🔓 Forgot password?</a>
 
-        // Login Form Submit
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const password = document.getElementById('loginPassword').value;
-            let identifier, identifierType;
-            
-            if (selectedRole === 'student') {
-                identifier = formatRollNo(document.getElementById('loginRollNo').value);
-                identifierType = 'rollNo';
-            } else {
-                identifier = document.getElementById('loginEmail').value;
-                identifierType = 'email';
-            }
+            <button class="btn btn-primary" id="studentLoginBtn" onclick="loginStudent()">
+                🚀 Login to Learn!
+            </button>
+            <div class="divider">or</div>
+            <button class="btn btn-outline" onclick="showStudentSignup()">✏️ Create New Account</button>
+        </div>
 
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        [identifierType]: identifier,
-                        password: password,
-                        role: selectedRole
-                    })
-                });
+        <!-- Student Signup -->
+        <div id="studentSignup" style="display:none;">
+            <div class="alert alert-error"  id="studentSignupError"><span>⚠️</span><span id="studentSignupErrorMsg"></span></div>
 
-                const data = await response.json();
+            <!-- User ID reveal box — shown after successful signup -->
+            <div class="uid-reveal" id="uidRevealBox">
+                <div class="uid-reveal-label">🎉 Your Unique User ID</div>
+                <div class="uid-reveal-code" id="uidRevealCode">GSS-XXXXX</div>
+                <div class="uid-reveal-note">📋 Save this ID! You will need it every time you log in.</div>
+                <button class="uid-copy-btn" onclick="copyUserId()">📋 Copy ID</button>
+            </div>
 
-                if (data.success) {
-                    // Capitalize the student/teacher name
-                    const userName = capitalizeName(data.name);
-                    
-                    showAlert(`Welcome back, ${userName}! Redirecting...`, 'success');
-                    setTimeout(() => {
-                        if (selectedRole === 'student') {
-                            window.location.href = '/dashboard';
-                        } else {
-                            window.location.href = '/teacher-dashboard';
-                        }
-                    }, 1000);
-                } else {
-                    showAlert(data.message || 'Invalid credentials!', 'error');
-                }
-            } catch (error) {
-                showAlert('Error connecting to server. Please try again.', 'error');
-            }
+            <div class="info-note">
+                📌 <strong>Note:</strong> After you register, you'll get a unique <strong>User ID</strong> like <em>GSS-A3K7P</em>. Save it — you'll use it to log in!
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-wrap">
+                    <span class="input-icon">😊</span>
+                    <input type="text" class="form-input" id="newStudentName" placeholder="Your full name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Roll Number</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🎒</span>
+                    <input type="text" class="form-input" id="newStudentRollNo" placeholder="e.g. 12">
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label class="form-label">Class</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🏫</span>
+                        <select class="form-input" id="newStudentClass" style="padding-left:40px;">
+                            <option value="">Select</option>
+                            <option value="1">Class 1</option><option value="2">Class 2</option>
+                            <option value="3">Class 3</option><option value="4">Class 4</option>
+                            <option value="5">Class 5</option><option value="6">Class 6</option>
+                            <option value="7">Class 7</option><option value="8">Class 8</option>
+                            <option value="9">Class 9</option><option value="10">Class 10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Division</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔤</span>
+                        <select class="form-input" id="newStudentDivision" style="padding-left:40px;">
+                            <option value="">Select</option>
+                            <option value="A">A</option><option value="B">B</option>
+                            <option value="C">C</option><option value="D">D</option>
+                            <option value="E">E</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" class="form-input" id="newStudentPassword"
+                           placeholder="Create a password" oninput="checkStrength(this.value)">
+                </div>
+                <div class="pw-strength-bar"><div class="pw-strength-fill" id="strengthFill"></div></div>
+                <div class="pw-strength-label" id="strengthLabel"></div>
+            </div>
+
+            <button class="btn btn-green" id="studentSignupBtn" onclick="signupStudent()">
+                🌟 Create My Account!
+            </button>
+            <div class="divider">or</div>
+            <button class="btn btn-outline" id="backToLoginBtn" onclick="showStudentLogin()">← Back to Login</button>
+        </div>
+
+    </div><!-- /studentPanel -->
+
+    <!-- ══════════ TEACHER PANEL ══════════ -->
+    <div class="panel" id="teacherPanel">
+
+        <!-- Teacher Login -->
+        <div id="teacherLogin">
+            <div class="alert alert-error" id="teacherLoginError">
+                <span>⚠️</span><span id="teacherLoginErrorMsg"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div class="input-wrap">
+                    <span class="input-icon">📧</span>
+                    <input type="email" class="form-input" id="teacherEmail" placeholder="teacher@school.com" autocomplete="username">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" class="form-input" id="teacherPassword" placeholder="Enter password"
+                           autocomplete="current-password"
+                           onkeypress="if(event.key==='Enter') loginTeacher()">
+                </div>
+            </div>
+            <button class="btn btn-primary" id="teacherLoginBtn" onclick="loginTeacher()">
+                👩‍🏫 Teacher Login
+            </button>
+            <div class="divider">or</div>
+            <button class="btn btn-outline" onclick="showTeacherSignup()">✏️ Register as Teacher</button>
+        </div>
+
+        <!-- Teacher Signup -->
+        <div id="teacherSignup" style="display:none;">
+            <div class="alert alert-error"  id="teacherSignupError"><span>⚠️</span><span id="teacherSignupErrorMsg"></span></div>
+            <div class="alert alert-success" id="teacherSignupSuccess"><span>🎉</span><span>Account created! Please log in.</span></div>
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👩‍🏫</span>
+                    <input type="text" class="form-input" id="newTeacherName" placeholder="Your name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <div class="input-wrap">
+                    <span class="input-icon">📧</span>
+                    <input type="email" class="form-input" id="newTeacherEmail" placeholder="teacher@school.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" class="form-input" id="newTeacherPassword" placeholder="Create a password">
+                </div>
+            </div>
+            <button class="btn btn-green" id="teacherSignupBtn" onclick="signupTeacher()">
+                🌟 Register
+            </button>
+            <div class="divider">or</div>
+            <button class="btn btn-outline" onclick="showTeacherLogin()">← Back to Login</button>
+        </div>
+
+    </div><!-- /teacherPanel -->
+
+</div><!-- /card -->
+
+
+<!-- ===================== FORGOT PASSWORD MODAL ===================== -->
+<div class="modal-overlay" id="forgotModal" onclick="closeForgotModalOutside(event)">
+    <div class="modal-box" id="forgotBox">
+        <button class="modal-close" onclick="closeForgotModal()" title="Close">×</button>
+
+        <div class="steps">
+            <div class="step-dot active" id="dot1"></div>
+            <div class="step-dot"        id="dot2"></div>
+            <div class="step-dot"        id="dot3"></div>
+        </div>
+
+        <!-- ══ Step 1: Identity Verification ══ -->
+        <div class="step-panel active" id="step1">
+            <div class="modal-icon">🔓</div>
+            <div class="modal-title">Forgot Password?</div>
+            <div class="modal-desc">Verify your identity by filling in your details. All fields must match your registered account.</div>
+
+            <div class="alert alert-error" id="verifyError">
+                <span>⚠️</span><span id="verifyErrorMsg">Something went wrong.</span>
+            </div>
+
+            <!-- Section: Student Info -->
+            <div class="modal-section-label">🪪 Your Account Details</div>
+
+            <div class="form-group">
+                <label class="form-label">User ID</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🪪</span>
+                    <input type="text" class="form-input uid-input" id="resetUserIdCode"
+                           placeholder="GSS-XXXXX" maxlength="9" autocomplete="off"
+                           oninput="this.value=this.value.toUpperCase()">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-wrap">
+                    <span class="input-icon">😊</span>
+                    <input type="text" class="form-input" id="resetName" placeholder="Your registered full name">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Roll Number</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🎒</span>
+                    <input type="text" class="form-input" id="resetRollNo" placeholder="e.g. 12">
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label class="form-label">Class</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🏫</span>
+                        <select class="form-input" id="resetClass" style="padding-left:40px;">
+                            <option value="">Select</option>
+                            <option value="1">Class 1</option><option value="2">Class 2</option>
+                            <option value="3">Class 3</option><option value="4">Class 4</option>
+                            <option value="5">Class 5</option><option value="6">Class 6</option>
+                            <option value="7">Class 7</option><option value="8">Class 8</option>
+                            <option value="9">Class 9</option><option value="10">Class 10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Division</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔤</span>
+                        <select class="form-input" id="resetDivision" style="padding-left:40px;">
+                            <option value="">Select</option>
+                            <option value="A">A</option><option value="B">B</option>
+                            <option value="C">C</option><option value="D">D</option>
+                            <option value="E">E</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="verifyBtn" onclick="submitVerify()">
+                🔍 Verify My Identity
+            </button>
+        </div>
+
+        <!-- ══ Step 2: Set New Password ══ -->
+        <div class="step-panel" id="step2">
+            <div class="modal-icon">🔐</div>
+            <div class="modal-title">Set New Password</div>
+            <div class="modal-desc">Identity verified! Now choose a strong new password.</div>
+
+            <div class="alert alert-error" id="resetError">
+                <span>⚠️</span><span id="resetErrorMsg">Something went wrong.</span>
+            </div>
+
+            <div class="alert alert-success" id="resetVerifiedBadge" style="margin-bottom:13px;">
+                <span>✅</span><span id="resetVerifiedName">Identity confirmed!</span>
+            </div>
+
+            <!-- Section: New Password -->
+            <div class="modal-section-label">🔑 Create New Password</div>
+
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" class="form-input" id="resetNewPassword"
+                           placeholder="Choose a new password"
+                           oninput="checkResetStrength(this.value)">
+                </div>
+                <div class="pw-strength-bar"><div class="pw-strength-fill" id="resetStrengthFill"></div></div>
+                <div class="pw-strength-label" id="resetStrengthLabel"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <div class="input-wrap">
+                    <span class="input-icon">✅</span>
+                    <input type="password" class="form-input" id="resetConfirmPassword"
+                           placeholder="Type password again"
+                           onkeypress="if(event.key==='Enter') submitReset()">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="resetBtn" onclick="submitReset()">
+                🔐 Reset My Password
+            </button>
+        </div>
+
+        <!-- ══ Step 3: Success ══ -->
+        <div class="step-panel" id="step3">
+            <div class="success-check">
+                <div class="check-circle">✓</div>
+                <div class="success-title">Password Reset!</div>
+                <div class="success-msg">
+                    Your password has been updated successfully.<br>
+                    You can now log in with your new password. 🎉
+                </div>
+            </div>
+            <button class="btn btn-green" onclick="closeForgotModal(); showStudentLogin();" style="margin-top:8px;">
+                🚀 Go to Login
+            </button>
+        </div>
+
+    </div>
+</div><!-- /forgotModal -->
+
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let _generatedUserId = '';   // Stores the User ID from the last successful signup
+let _verifiedUserId  = '';   // Stores verified User ID for the password reset step
+
+// ============================================================
+//  ROLE SWITCHING
+// ============================================================
+function switchRole(role, btn) {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('studentPanel').classList.toggle('active', role === 'student');
+    document.getElementById('teacherPanel').classList.toggle('active', role === 'teacher');
+    clearAlerts();
+}
+
+// ============================================================
+//  STUDENT — show/hide views
+// ============================================================
+function showStudentLogin() {
+    document.getElementById('studentLogin').style.display  = 'block';
+    document.getElementById('studentSignup').style.display = 'none';
+    clearAlerts();
+}
+function showStudentSignup() {
+    document.getElementById('studentLogin').style.display  = 'none';
+    document.getElementById('studentSignup').style.display = 'block';
+    clearAlerts();
+    document.getElementById('uidRevealBox').classList.remove('show');
+}
+
+// ============================================================
+//  STUDENT LOGIN — uses User ID
+// ============================================================
+async function loginStudent() {
+    const userIdCode = document.getElementById('studentUserIdCode').value.trim().toUpperCase();
+    const password   = document.getElementById('studentPassword').value;
+    const btn        = document.getElementById('studentLoginBtn');
+
+    if (!userIdCode || !password) {
+        showAlert('studentLoginError','studentLoginErrorMsg','Please enter your User ID and password.');
+        return;
+    }
+    if (!userIdCode.startsWith('GSS-') || userIdCode.length !== 9) {
+        showAlert('studentLoginError','studentLoginErrorMsg','User ID format: GSS-XXXXX (9 characters).');
+        return;
+    }
+    setLoading(btn, true, '🚀 Login to Learn!');
+    try {
+        const res  = await fetch('/login', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ role:'student', userIdCode, password })
         });
+        const data = await res.json();
+        if (data.success) {
+            btn.innerHTML = '✅ Welcome back!';
+            setTimeout(() => window.location.href = '/dashboard', 600);
+        } else {
+            showAlert('studentLoginError','studentLoginErrorMsg', data.message || 'Invalid User ID or password.');
+            setLoading(btn, false, '🚀 Login to Learn!');
+        }
+    } catch {
+        showAlert('studentLoginError','studentLoginErrorMsg','Connection error. Please try again.');
+        setLoading(btn, false, '🚀 Login to Learn!');
+    }
+}
 
-        // Signup Form Submit
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const name = document.getElementById('signupName').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            
-            let identifier, identifierType;
-            
-            if (selectedRole === 'student') {
-                identifier = formatRollNo(document.getElementById('signupRollNo').value);
-                identifierType = 'rollNo';
-            } else {
-                identifier = document.getElementById('signupEmail').value;
-                identifierType = 'email';
-            }
+// ============================================================
+//  STUDENT SIGN UP
+// ============================================================
+async function signupStudent() {
+    const name      = document.getElementById('newStudentName').value.trim();
+    const rollNo    = document.getElementById('newStudentRollNo').value.trim();
+    const className = document.getElementById('newStudentClass').value;
+    const division  = document.getElementById('newStudentDivision').value;
+    const password  = document.getElementById('newStudentPassword').value;
+    const btn       = document.getElementById('studentSignupBtn');
 
-            // Validation
-            if (password !== confirmPassword) {
-                showAlert('Passwords do not match!', 'error');
-                return;
-            }
-
-            if (password.length < 4) {
-                showAlert('Password must be at least 4 characters long!', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        name: name,
-                        [identifierType]: identifier,
-                        password: password,
-                        role: selectedRole
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showAlert('Account created successfully! Redirecting to login...', 'success');
-                    setTimeout(() => {
-                        showLogin();
-                        if (selectedRole === 'student') {
-                            document.getElementById('loginRollNo').value = identifier;
-                        } else {
-                            document.getElementById('loginEmail').value = identifier;
-                        }
-                    }, 1500);
-                } else {
-                    showAlert(data.message || 'Signup failed. Please try again.', 'error');
-                }
-            } catch (error) {
-                showAlert('Error connecting to server. Please try again.', 'error');
-            }
+    if (!name || !rollNo || !className || !division || !password) {
+        showAlert('studentSignupError','studentSignupErrorMsg','Please fill in all fields including Class and Division.');
+        return;
+    }
+    if (password.length < 4) {
+        showAlert('studentSignupError','studentSignupErrorMsg','Password must be at least 4 characters.');
+        return;
+    }
+    setLoading(btn, true, '🌟 Create My Account!');
+    try {
+        const res  = await fetch('/signup', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ role:'student', name, rollNo, className, division, password })
         });
+        const data = await res.json();
+        if (data.success) {
+            _generatedUserId = data.userIdCode || '';
+            showUserIdReveal(_generatedUserId);
+            document.getElementById('studentSignupError').classList.remove('show');
+            ['newStudentName','newStudentRollNo','newStudentPassword'].forEach(id =>
+                document.getElementById(id).value = '');
+            document.getElementById('newStudentClass').value    = '';
+            document.getElementById('newStudentDivision').value = '';
+            document.getElementById('strengthFill').style.width  = '0%';
+            document.getElementById('strengthLabel').textContent = '';
+            const backBtn = document.getElementById('backToLoginBtn');
+            backBtn.textContent = '🚀 Go to Login';
+            backBtn.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+            backBtn.style.color = 'white';
+            backBtn.style.border = 'none';
+        } else {
+            showAlert('studentSignupError','studentSignupErrorMsg', data.message || 'Signup failed.');
+        }
+        setLoading(btn, false, '🌟 Create My Account!');
+    } catch {
+        showAlert('studentSignupError','studentSignupErrorMsg','Connection error. Please try again.');
+        setLoading(btn, false, '🌟 Create My Account!');
+    }
+}
 
-        // Auto-format roll number input
-        document.querySelectorAll('input[type="text"]').forEach(input => {
-            if (input.id.includes('RollNo')) {
-                input.addEventListener('input', (e) => {
-                    // Only allow numbers
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                    // Limit to 3 digits
-                    if (e.target.value.length > 3) {
-                        e.target.value = e.target.value.slice(0, 3);
-                    }
-                });
-            }
+function showUserIdReveal(uid) {
+    document.getElementById('uidRevealCode').textContent = uid;
+    document.getElementById('uidRevealBox').classList.add('show');
+    document.getElementById('studentUserIdCode').value = uid;
+}
+
+function copyUserId() {
+    const uid = document.getElementById('uidRevealCode').textContent;
+    navigator.clipboard.writeText(uid).then(() => {
+        const btn = document.querySelector('.uid-copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy ID', 2000);
+    }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = uid;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const btn = document.querySelector('.uid-copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy ID', 2000);
+    });
+}
+
+// ============================================================
+//  TEACHER — show/hide views
+// ============================================================
+function showTeacherLogin() {
+    document.getElementById('teacherLogin').style.display  = 'block';
+    document.getElementById('teacherSignup').style.display = 'none';
+    clearAlerts();
+}
+function showTeacherSignup() {
+    document.getElementById('teacherLogin').style.display  = 'none';
+    document.getElementById('teacherSignup').style.display = 'block';
+    clearAlerts();
+}
+
+// ============================================================
+//  TEACHER LOGIN
+// ============================================================
+async function loginTeacher() {
+    const email    = document.getElementById('teacherEmail').value.trim();
+    const password = document.getElementById('teacherPassword').value;
+    const btn      = document.getElementById('teacherLoginBtn');
+
+    if (!email || !password) {
+        showAlert('teacherLoginError','teacherLoginErrorMsg','Please enter your email and password.');
+        return;
+    }
+    setLoading(btn, true, '👩‍🏫 Teacher Login');
+    try {
+        const res  = await fetch('/login', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ role:'teacher', email, password })
         });
-    </script>
+        const data = await res.json();
+        if (data.success) {
+            btn.innerHTML = '✅ Welcome!';
+            setTimeout(() => window.location.href = '/teacher-dashboard', 600);
+        } else {
+            showAlert('teacherLoginError','teacherLoginErrorMsg', data.message || 'Invalid credentials.');
+            setLoading(btn, false, '👩‍🏫 Teacher Login');
+        }
+    } catch {
+        showAlert('teacherLoginError','teacherLoginErrorMsg','Connection error. Please try again.');
+        setLoading(btn, false, '👩‍🏫 Teacher Login');
+    }
+}
+
+// ============================================================
+//  TEACHER SIGN UP
+// ============================================================
+async function signupTeacher() {
+    const name     = document.getElementById('newTeacherName').value.trim();
+    const email    = document.getElementById('newTeacherEmail').value.trim();
+    const password = document.getElementById('newTeacherPassword').value;
+    const btn      = document.getElementById('teacherSignupBtn');
+
+    if (!name || !email || !password) {
+        showAlert('teacherSignupError','teacherSignupErrorMsg','Please fill in all fields.');
+        return;
+    }
+    setLoading(btn, true, '🌟 Register');
+    try {
+        const res  = await fetch('/signup', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ role:'teacher', name, email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('teacherSignupSuccess').classList.add('show');
+            document.getElementById('teacherSignupError').classList.remove('show');
+            setTimeout(showTeacherLogin, 1800);
+        } else {
+            showAlert('teacherSignupError','teacherSignupErrorMsg', data.message || 'Signup failed.');
+        }
+        setLoading(btn, false, '🌟 Register');
+    } catch {
+        showAlert('teacherSignupError','teacherSignupErrorMsg','Connection error. Please try again.');
+        setLoading(btn, false, '🌟 Register');
+    }
+}
+
+// ============================================================
+//  FORGOT PASSWORD MODAL
+// ============================================================
+function openForgotModal() {
+    document.getElementById('forgotModal').classList.add('open');
+    goToStep(1);
+    // Clear all fields
+    ['resetUserIdCode','resetName','resetRollNo','resetNewPassword','resetConfirmPassword'].forEach(id =>
+        document.getElementById(id).value = '');
+    document.getElementById('resetClass').value    = '';
+    document.getElementById('resetDivision').value = '';
+    document.getElementById('verifyError').classList.remove('show');
+    document.getElementById('resetError').classList.remove('show');
+    document.getElementById('resetVerifiedBadge').classList.remove('show');
+    document.getElementById('resetStrengthFill').style.width  = '0%';
+    document.getElementById('resetStrengthLabel').textContent = '';
+    _verifiedUserId = '';
+}
+function closeForgotModal() {
+    document.getElementById('forgotModal').classList.remove('open');
+}
+function closeForgotModalOutside(e) {
+    if (e.target === document.getElementById('forgotModal')) closeForgotModal();
+}
+function goToStep(n) {
+    document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i + 1 === n));
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+        d.classList.remove('active','done');
+        if (i + 1 < n)  d.classList.add('done');
+        if (i + 1 === n) d.classList.add('active');
+    });
+}
+
+// ── Step 1: Verify identity ──
+async function submitVerify() {
+    const userIdCode = document.getElementById('resetUserIdCode').value.trim().toUpperCase();
+    const name       = document.getElementById('resetName').value.trim();
+    const rollNo     = document.getElementById('resetRollNo').value.trim();
+    const className  = document.getElementById('resetClass').value;
+    const division   = document.getElementById('resetDivision').value;
+    const btn        = document.getElementById('verifyBtn');
+
+    if (!userIdCode) {
+        showAlert('verifyError','verifyErrorMsg','Please enter your User ID (e.g. GSS-A3K7P).');
+        return;
+    }
+    if (!userIdCode.startsWith('GSS-') || userIdCode.length !== 9) {
+        showAlert('verifyError','verifyErrorMsg','User ID format must be GSS-XXXXX (9 characters).');
+        return;
+    }
+    if (!name) {
+        showAlert('verifyError','verifyErrorMsg','Please enter your full name.');
+        return;
+    }
+    if (!rollNo) {
+        showAlert('verifyError','verifyErrorMsg','Please enter your roll number.');
+        return;
+    }
+    if (!className || !division) {
+        showAlert('verifyError','verifyErrorMsg','Please select your Class and Division.');
+        return;
+    }
+
+    document.getElementById('verifyError').classList.remove('show');
+    setLoading(btn, true, '🔍 Verify My Identity');
+
+    try {
+        const res  = await fetch('/verify_identity', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ userIdCode, name, rollNo, className, division })
+        });
+        const data = await res.json();
+        if (data.success) {
+            _verifiedUserId = userIdCode;
+            // Show confirmation badge on step 2
+            document.getElementById('resetVerifiedBadge').classList.add('show');
+            document.getElementById('resetVerifiedName').textContent =
+                `✅ Verified: ${data.studentName || name} (${userIdCode})`;
+            goToStep(2);
+        } else {
+            showAlert('verifyError','verifyErrorMsg', data.message || 'Details do not match. Please check and try again.');
+        }
+    } catch {
+        showAlert('verifyError','verifyErrorMsg','Connection error. Please try again.');
+    }
+    setLoading(btn, false, '🔍 Verify My Identity');
+}
+
+// ── Step 2: Reset password ──
+async function submitReset() {
+    const newPassword = document.getElementById('resetNewPassword').value;
+    const confirmPass = document.getElementById('resetConfirmPassword').value;
+    const btn         = document.getElementById('resetBtn');
+
+    if (!newPassword || newPassword.length < 4) {
+        showAlert('resetError','resetErrorMsg','Password must be at least 4 characters.');
+        return;
+    }
+    if (newPassword !== confirmPass) {
+        showAlert('resetError','resetErrorMsg',"Passwords don't match. Please try again.");
+        return;
+    }
+    document.getElementById('resetError').classList.remove('show');
+    setLoading(btn, true, '🔐 Reset My Password');
+    try {
+        const res  = await fetch('/reset_password_request', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ userIdCode: _verifiedUserId, newPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+            goToStep(3);
+        } else {
+            showAlert('resetError','resetErrorMsg', data.message || 'Could not reset password. Please try again.');
+        }
+    } catch {
+        showAlert('resetError','resetErrorMsg','Connection error. Please try again.');
+    }
+    setLoading(btn, false, '🔐 Reset My Password');
+}
+
+// ============================================================
+//  SHARED HELPERS
+// ============================================================
+function showAlert(alertId, msgId, msg) {
+    document.getElementById(msgId).textContent = msg;
+    document.getElementById(alertId).classList.add('show');
+}
+function clearAlerts() {
+    document.querySelectorAll('.alert').forEach(a => a.classList.remove('show'));
+    document.getElementById('uidRevealBox').classList.remove('show');
+}
+function setLoading(btn, loading, originalText) {
+    btn.disabled  = loading;
+    btn.innerHTML = loading
+        ? `<span class="spinner"></span> Please wait...`
+        : originalText;
+}
+
+// Password strength meter
+function checkStrength(pw) {
+    updateStrengthUI(pw,
+        document.getElementById('strengthFill'),
+        document.getElementById('strengthLabel'));
+}
+function checkResetStrength(pw) {
+    updateStrengthUI(pw,
+        document.getElementById('resetStrengthFill'),
+        document.getElementById('resetStrengthLabel'));
+}
+function updateStrengthUI(pw, fill, label) {
+    if (!pw) { fill.style.width = '0%'; label.textContent = ''; return; }
+    let score = 0;
+    if (pw.length >= 4)          score++;
+    if (pw.length >= 8)          score++;
+    if (/[A-Z]/.test(pw))        score++;
+    if (/[0-9]/.test(pw))        score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+        { pct:'20%', color:'#d63031', text:'😬 Very weak' },
+        { pct:'40%', color:'#e17055', text:'😐 Weak' },
+        { pct:'60%', color:'#fdcb6e', text:'🙂 Fair' },
+        { pct:'80%', color:'#00b894', text:'😊 Strong' },
+        { pct:'100%',color:'#0984e3', text:'🔥 Very strong!' },
+    ];
+    const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+    fill.style.width      = lvl.pct;
+    fill.style.background = lvl.color;
+    label.textContent     = lvl.text;
+    label.style.color     = lvl.color;
+}
+</script>
 </body>
 </html>

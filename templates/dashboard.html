@@ -3,532 +3,703 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - English Learning App</title>
+    <title>Dashboard - Gayathri Speak Smart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --purple:      #667eea;
+            --purple-dark: #764ba2;
+            --green:       #00b894;
+            --teal:        #00cec9;
+            --red:         #ff6b6b;
+            --bg:          #f0f2ff;
+            --card:        #ffffff;
+            --text:        #2d3436;
+            --muted:       #636e72;
+            --border:      #e0e4ff;
         }
 
         body {
-            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #6b6fc5 0%, #7b5ea7 40%, #9b6bbf 70%, #b07fd4 100%);
             min-height: 100vh;
-            padding: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .container {
-            max-width: 900px;
-            width: 100%;
-        }
-
-        .dashboard-card {
-            background: white;
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: slideIn 0.5s ease-out;
+            padding: 24px 16px;
             position: relative;
+            overflow-x: hidden;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .bg-blob { position:fixed; border-radius:50%; pointer-events:none; animation:blobFloat 18s ease-in-out infinite; }
+        .blob1 { width:500px;height:500px;background:rgba(255,255,255,.07);bottom:-160px;right:-140px; }
+        .blob2 { width:360px;height:360px;background:rgba(255,255,255,.07);top:-110px;left:-110px;animation-delay:6s; }
+        .blob3 { width:160px;height:160px;background:rgba(255,255,255,.06);top:44%;right:4%;animation-delay:10s; }
+        @keyframes blobFloat { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-28px) scale(1.04);} }
 
-        /* Top Right Button (Sign Out) */
-        .signout-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Comic Sans MS', cursive;
-            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .deco-star { position:fixed; pointer-events:none; color:rgba(255,255,255,.5); animation:starTwinkle 4s ease-in-out infinite; }
+        @keyframes starTwinkle { 0%,100%{opacity:.2;transform:scale(1);} 50%{opacity:.65;transform:scale(1.3);} }
 
-        .signout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
-            background: linear-gradient(135deg, #ff5252, #e91e63);
-        }
-
-        .signout-btn:active {
-            transform: translateY(0);
-        }
-
-        .header-section {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 3px dashed #f0f0f0;
-        }
-
-        .welcome-text {
-            font-size: 20px;
-            color: #999;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        .user-name {
-            font-size: 48px;
-            color: #333;
-            font-weight: 900;
-            margin-bottom: 10px;
-            font-family: 'Comic Sans MS', cursive;
-            text-shadow: 3px 3px 0px #667eea22;
-            letter-spacing: 1px;
-        }
-
-        .user-roll {
-            font-size: 18px;
-            color: #666;
-            background: linear-gradient(135deg, #ffd89b, #19547b);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 25px;
-            display: inline-block;
-            margin-top: 10px;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .motivational-quote {
-            text-align: center;
-            padding: 25px;
-            background: linear-gradient(135deg, #fff9e6, #ffe6f0);
-            border-radius: 20px;
-            margin-top: 30px;
-            border-left: 6px solid #667eea;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
-        }
-
-        .quote-text {
-            font-size: 18px;
-            color: #555;
-            font-style: italic;
-            line-height: 1.6;
-            font-weight: 600;
-            font-family: 'Comic Sans MS', cursive;
-        }
-
-        .quote-author {
-            font-size: 14px;
-            color: #888;
-            margin-top: 10px;
-            font-weight: 700;
-        }
-
-        .buttons-section {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 18px 40px;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-            font-family: 'Comic Sans MS', cursive;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 3px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* ── Main card ── */
+        .card {
+            background: var(--card);
+            border-radius: 28px;
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s;
+            max-width: 780px;
+            box-shadow: 0 24px 80px rgba(102,126,234,.2), 0 4px 16px rgba(0,0,0,.06);
+            position: relative;
+            z-index: 10;
+            animation: cardPop .6s cubic-bezier(.34,1.56,.64,1) both;
+            overflow: hidden;
+        }
+        @keyframes cardPop { from{transform:scale(.9) translateY(24px);opacity:0;} to{transform:scale(1) translateY(0);opacity:1;} }
+
+        /* ── Banner ── */
+        .card-banner {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            padding: 32px 32px 52px;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0;
+            height: 32px;
+            background: var(--card);
+            border-radius: 32px 32px 0 0;
+        }
+        .banner-blob { position:absolute; border-radius:50%; pointer-events:none; background:rgba(255,255,255,.1); }
+        .bb1 { width:220px;height:220px;bottom:-80px;right:-60px; }
+        .bb2 { width:130px;height:130px;top:-40px;right:160px; }
+
+        .banner-actions {
+            position: absolute;
+            top: 18px; right: 20px;
+            display: flex; gap: 8px;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            border: none; border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 13px; font-weight: 800;
+            cursor: pointer; transition: all .25s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-logout-top {
+            background: rgba(255,255,255,.18);
+            border: 1.5px solid rgba(255,255,255,.3);
+            color: #fff;
+            backdrop-filter: blur(6px);
+        }
+        .btn-logout-top:hover { background: rgba(255,255,255,.28); transform: translateY(-1px); }
+
+        .profile-area { position: relative; z-index: 2; }
+        .avatar-ring {
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,.22);
+            border: 3px solid rgba(255,255,255,.4);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; margin-bottom: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            animation: owlBounce 2.6s ease-in-out infinite;
+        }
+        @keyframes owlBounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-7px);} }
+
+        .welcome-lbl {
+            font-size: 13px; font-weight: 700;
+            color: rgba(255,255,255,.75);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .student-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 34px; color: #fff;
+            line-height: 1.1; margin-bottom: 12px;
+            text-shadow: 0 2px 12px rgba(0,0,0,.15);
         }
 
-        .modal.active {
-            display: flex;
+        .id-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .id-chip {
+            background: rgba(255,255,255,.18);
+            border: 1.5px solid rgba(255,255,255,.28);
+            border-radius: 50px;
+            padding: 5px 13px;
+            font-size: 12px; font-weight: 700; color: #fff;
+            backdrop-filter: blur(6px);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        /* ── Card body ── */
+        .card-body { padding: 24px 28px 28px; }
 
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
+        /* ── Stats ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .stat-box {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 10px;
             text-align: center;
-            max-width: 450px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s;
+            transition: transform .2s, box-shadow .2s;
         }
+        .stat-box:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(102,126,234,.15); }
+        .stat-icon { font-size: 22px; margin-bottom: 6px; }
+        .stat-val  { font-family:'Fredoka One',cursive; font-size:22px; color:var(--purple-dark); line-height:1; }
+        .stat-lbl  { font-size:11px; font-weight:700; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:.4px; }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* ── Quote ── */
+        .quote-box {
+            background: linear-gradient(135deg, #fff9e6, #ffe8f5);
+            border: 2px solid #f5d9f7;
+            border-left: 5px solid var(--purple);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 22px;
         }
+        .quote-text   { font-size:14px; font-weight:700; color:#555; font-style:italic; line-height:1.65; }
+        .quote-author { font-size:12px; font-weight:800; color:var(--purple); margin-top:8px; }
 
-        .modal-icon {
-            font-size: 60px;
-            margin-bottom: 15px;
+        /* ── Action buttons ── */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
         }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 800;
-            color: #333;
-            margin-bottom: 15px;
-            font-family: 'Comic Sans MS', cursive;
+        .btn {
+            padding: 15px 20px;
+            border: none; border-radius: 14px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 15px; font-weight: 800;
+            cursor: pointer; transition: all .25s;
+            text-decoration: none;
+            display: flex; align-items: center;
+            justify-content: center; gap: 8px;
+            position: relative; overflow: hidden;
         }
+        .btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:.2s; }
+        .btn:hover::after { background:rgba(255,255,255,.12); }
+        .btn:active { transform:scale(.97); }
 
-        .modal-text {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.5;
+        .btn-start {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: white;
+            box-shadow: 0 6px 20px rgba(102,126,234,.4);
+            grid-column: 1 / -1;
+            font-size: 17px; padding: 17px;
         }
+        .btn-start:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(102,126,234,.5); }
 
-        .modal-warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            color: #856404;
-            font-weight: 600;
+        .btn-progress {
+            background: linear-gradient(135deg, var(--green), var(--teal));
+            color: white;
+            box-shadow: 0 6px 20px rgba(0,184,148,.3);
+        }
+        .btn-progress:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,184,148,.4); }
+
+        .btn-logout-full {
+            background: var(--bg);
+            color: var(--muted);
+            border: 2px solid var(--border);
             font-size: 14px;
         }
+        .btn-logout-full:hover { border-color: var(--purple); color: var(--purple-dark); }
 
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
+        /* ── Danger zone ── */
+        .danger-zone {
+            border: 2px dashed #ffd0d0;
+            border-radius: 14px;
+            padding: 14px 18px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 12px;
+        }
+        .danger-label { font-size: 12px; font-weight: 700; color: #c0392b; }
+        .danger-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .btn-delete {
+            padding: 8px 16px;
+            background: #fde8e8; color: #c0392b;
+            border: 2px solid #f5a5a5; border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: all .25s; flex-shrink: 0;
+        }
+        .btn-delete:hover { background: #ff6b6b; color: white; border-color: #ff6b6b; transform: translateY(-1px); }
+
+        /* ══ MODALS ══ */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(20,20,40,.6);
+            z-index: 1000; backdrop-filter: blur(6px);
+            justify-content: center; align-items: center; padding: 20px;
+            overflow-y: auto;
+        }
+        .modal.active { display: flex; }
+
+        /* Delete modal */
+        .modal-box-sm {
+            background: white; border-radius: 24px;
+            padding: 36px 30px; max-width: 420px; width: 100%;
+            box-shadow: 0 28px 72px rgba(0,0,0,.25);
+            animation: cardPop .4s cubic-bezier(.34,1.56,.64,1) both;
+            text-align: center; margin: auto;
+        }
+        .modal-icon  { font-size:54px; margin-bottom:12px; }
+        .modal-title { font-family:'Fredoka One',cursive; font-size:22px; color:#c0392b; margin-bottom:10px; }
+        .modal-body  { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
+        .modal-warn  {
+            background:#fff3cd; border:2px solid #ffc107;
+            border-radius:12px; padding:13px 15px;
+            margin-bottom:20px; color:#856404;
+            font-size:13px; font-weight:700;
+            text-align:left; line-height:1.7;
+        }
+        .modal-btns  { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+        .mbtn {
+            padding:12px 24px; border:none; border-radius:11px;
+            font-family:'Nunito',sans-serif; font-size:14px; font-weight:800;
+            cursor:pointer; transition:all .25s;
+        }
+        .mbtn-cancel  { background:var(--bg); color:var(--text); border:2px solid var(--border); }
+        .mbtn-cancel:hover { background:#e0e4ff; }
+        .mbtn-danger  { background:linear-gradient(135deg,#ff6b6b,#ee5a6f); color:white; box-shadow:0 5px 16px rgba(255,107,107,.35); }
+        .mbtn-danger:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(255,107,107,.45); }
+        .mbtn:disabled { opacity:.6; cursor:not-allowed; transform:none !important; }
+
+        /* Progress modal */
+        .modal-box-lg {
+            background: white; border-radius: 24px;
+            padding: 32px 28px; max-width: 600px; width: 100%;
+            max-height: calc(100vh - 40px); overflow-y: auto;
+            box-shadow: 0 28px 72px rgba(0,0,0,.25);
+            animation: cardPop .4s cubic-bezier(.34,1.56,.64,1) both;
+            position: relative; margin: auto;
+        }
+        .modal-close {
+            position: absolute; top: 14px; right: 16px;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: #f5f5f5; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: #666;
+        }
+        .modal-close:hover { background: #ffe0e0; color: #c0392b; }
+
+        .prog-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 22px; color: var(--purple-dark);
+            margin-bottom: 20px; text-align: center;
         }
 
-        .modal-btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Comic Sans MS', cursive;
+        /* XP breakdown bars */
+        .xp-section { margin-bottom: 24px; }
+        .xp-section h3 { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+
+        .xp-bar-row { margin-bottom: 12px; }
+        .xp-bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .xp-bar-label { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .xp-bar-val   { font-size: 13px; font-weight: 800; color: var(--purple-dark); }
+        .xp-bar-track { height: 10px; background: var(--border); border-radius: 6px; overflow: hidden; }
+        .xp-bar-fill  { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--purple), var(--purple-dark)); transition: width .8s ease; }
+
+        /* Summary stats grid in progress modal */
+        .prog-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 22px;
         }
-
-        .modal-btn-danger {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
+        .prog-stat {
+            background: var(--bg); border: 2px solid var(--border);
+            border-radius: 14px; padding: 14px 10px; text-align: center;
         }
+        .prog-stat .ps-icon { font-size: 20px; margin-bottom: 4px; }
+        .prog-stat .ps-val  { font-family:'Fredoka One',cursive; font-size:20px; color:var(--purple-dark); }
+        .prog-stat .ps-lbl  { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-top:2px; }
 
-        .modal-btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-            background: linear-gradient(135deg, #ff5252, #e91e63);
+        /* Unlocked features */
+        .unlock-section h3 { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+        .feature-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+        .feat-pill {
+            padding: 7px 14px; border-radius: 50px;
+            font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; gap: 6px;
         }
+        .feat-unlocked { background: #d4f5ee; color: #00796b; border: 2px solid #80cbc4; }
+        .feat-locked   { background: #f5f5f5; color: #aaa; border: 2px dashed #ddd; }
 
-        .modal-btn-cancel {
-            background: #f0f0f0;
-            color: #333;
-        }
+        /* Loading spinner inside modal */
+        .prog-loading { text-align: center; padding: 40px; color: var(--muted); font-weight: 700; font-size: 15px; }
+        .spin { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .modal-btn-cancel:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-
-        .modal-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .dashboard-card {
-                padding: 25px;
-                padding-top: 60px;
-            }
-
-            .user-name {
-                font-size: 38px;
-            }
-
-            .buttons-section {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-
-            .signout-btn {
-                top: 15px;
-                right: 15px;
-                padding: 8px 15px;
-                font-size: 12px;
-            }
-
-            .modal-content {
-                margin: 20px;
-                max-width: calc(100% - 40px);
-                padding: 25px;
-            }
-
-            .modal-buttons {
-                flex-direction: column;
-            }
-
-            .modal-btn {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            .dashboard-card {
-                padding: 20px;
-                padding-top: 55px;
-            }
-
-            .user-name {
-                font-size: 32px;
-            }
-
-            .signout-btn {
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                font-size: 11px;
-            }
+        /* ── Responsive ── */
+        @media(max-width: 560px) {
+            body { padding: 14px 10px; }
+            .card-banner { padding: 28px 20px 44px; }
+            .student-name { font-size: 26px; }
+            .card-body { padding: 20px 18px 22px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .actions-grid { grid-template-columns: 1fr !important; }
+            .actions-grid .btn { font-size: 14px !important; padding: 13px !important; }
+            .danger-zone { flex-direction:column; text-align:center; }
+            .prog-stats { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="dashboard-card">
-            <!-- Sign Out Button (Top Right) -->
-            <button class="signout-btn" onclick="showSignOutModal()">
-                🗑️ Delete Account
+
+<div class="bg-blob blob1"></div>
+<div class="bg-blob blob2"></div>
+<div class="bg-blob blob3"></div>
+<div class="deco-star" style="top:10%;left:16%;font-size:18px;animation-delay:0s;">★</div>
+<div class="deco-star" style="top:7%;right:20%;font-size:14px;animation-delay:1s;">✦</div>
+<div class="deco-star" style="bottom:18%;left:13%;font-size:22px;animation-delay:2s;">★</div>
+<div class="deco-star" style="bottom:28%;right:16%;font-size:13px;animation-delay:.5s;">✦</div>
+<div class="deco-star" style="top:50%;left:6%;font-size:16px;animation-delay:1.8s;">✧</div>
+
+<div class="card">
+
+    <!-- Banner -->
+    <div class="card-banner">
+        <div class="banner-blob bb1"></div>
+        <div class="banner-blob bb2"></div>
+
+
+
+        <div class="profile-area">
+            <div class="avatar-ring">🦉</div>
+            <div class="welcome-lbl">🎉 Welcome Back!</div>
+            <!-- FIX: use session.name correctly -->
+            <div class="student-name" id="studentName">{{ session['name'] }}</div>
+            <div class="id-chips">
+                <span class="id-chip">📚 Roll No: {{ session['roll_no'] }}</span>
+                <!-- FIX: was session.class → correct key is session['class_name'] -->
+                <span class="id-chip">🏫 Class {{ session['class_name'] }}</span>
+                <span class="id-chip">🔤 Division {{ session['division'] }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="card-body">
+
+        <!-- Quick stats (loaded via JS from /get_student_info) -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-val" id="statXP">—</div>
+                <div class="stat-lbl">XP Earned</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-val" id="statLevel">—</div>
+                <div class="stat-lbl">Level</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-val" id="statStars">—</div>
+                <div class="stat-lbl">Stars</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-val" id="statAccuracy">—</div>
+                <div class="stat-lbl">Accuracy</div>
+            </div>
+        </div>
+
+        <!-- Quote -->
+        <div class="quote-box">
+            <div class="quote-text"  id="quoteText">"The expert in anything was once a beginner."</div>
+            <div class="quote-author" id="quoteAuthor">— Helen Hayes</div>
+        </div>
+
+        <!-- Actions — 3 horizontal buttons -->
+        <div class="actions-grid" style="grid-template-columns:1fr 1fr 1fr;">
+            <a href="/main" class="btn btn-start" style="grid-column:unset;font-size:14px;padding:14px 10px;">🚀 Start Learning</a>
+            <button onclick="openProgressModal()" class="btn btn-progress" style="font-size:14px;padding:14px 10px;">📊 My Progress</button>
+            <a href="/logout" class="btn btn-logout-full" style="font-size:14px;padding:14px 10px;">🚪 Logout</a>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="danger-zone">
+            <div>
+                <div class="danger-label">⚠️ Danger Zone</div>
+                <div class="danger-sub">Permanently delete your account and all data</div>
+            </div>
+            <button class="btn-delete" onclick="showDeleteModal()">🗑️ Delete Account</button>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ══ MY PROGRESS MODAL ══ -->
+<div class="modal" id="progressModal">
+    <div class="modal-box-lg">
+        <button class="modal-close" onclick="closeProgressModal()">✕</button>
+        <div class="prog-title">📊 My Progress</div>
+        <div id="progressContent">
+            <div class="prog-loading">
+                <div class="spin"></div><br>Loading your progress…
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══ DELETE ACCOUNT MODAL ══ -->
+<div class="modal" id="deleteModal">
+    <div class="modal-box-sm">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-title">Delete Account?</div>
+        <div class="modal-body">This will permanently erase your account and all your data, including:</div>
+        <div class="modal-warn">
+            ❌ All your progress and XP<br>
+            ❌ All your activity history<br>
+            ❌ All your earned stars<br>
+            ❌ Your login credentials<br><br>
+            <strong>This action CANNOT be undone!</strong>
+        </div>
+        <div class="modal-btns">
+            <button class="mbtn mbtn-cancel" onclick="hideDeleteModal()">No, Keep Account</button>
+            <button class="mbtn mbtn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+                Yes, Delete Forever
             </button>
-
-            <!-- Header Section -->
-            <div class="header-section">
-                <div class="welcome-text">🎉 Welcome Back! 🎉</div>
-                <div class="user-name" id="studentName">{{ session.name }}</div>
-                <div class="user-roll">📚 Roll No: {{ session.roll_no }}</div>
-            </div>
-
-            <!-- Motivational Quote -->
-            <div class="motivational-quote">
-                <div class="quote-text" id="quoteText">
-                    "The beautiful thing about learning is that no one can take it away from you."
-                </div>
-                <div class="quote-author">- B.B. King</div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="buttons-section">
-                <a href="/main" class="btn btn-primary">🚀 Start Learning</a>
-                <button onclick="logout()" class="btn btn-secondary">🚪 Logout</button>
-            </div>
         </div>
     </div>
+</div>
 
-    <!-- Sign Out (Delete Account) Confirmation Modal -->
-    <div class="modal" id="signOutModal">
-        <div class="modal-content">
-            <div class="modal-icon">⚠️</div>
-            <div class="modal-title">Delete Account Permanently?</div>
-            <div class="modal-text">
-                This will permanently delete your account and all your data including:
+
+<script>
+{% raw %}
+/* ── Capitalize name ── */
+function capitalizeName(name) {
+    if (!name) return '';
+    return name.split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+}
+
+/* ── On load ── */
+window.addEventListener('DOMContentLoaded', function () {
+    const el = document.getElementById('studentName');
+    if (el) {
+        const n = el.textContent.trim();
+        if (n && !n.includes('{{')) el.textContent = capitalizeName(n);
+    }
+    loadDashboardStats();
+    setRandomQuote();
+});
+
+/* ── Load quick stats for dashboard tiles ── */
+async function loadDashboardStats() {
+    try {
+        const res  = await fetch('/get_student_info');
+        const data = await res.json();
+        if (data.success) {
+            const s = data.student;
+            const xp = s.xp || 0;
+            document.getElementById('statXP').textContent       = xp;
+            document.getElementById('statLevel').textContent    = Math.floor(xp / 100) + 1;
+            document.getElementById('statStars').textContent    = s.totalStars       || 0;
+            document.getElementById('statAccuracy').textContent = (s.averageAccuracy || 0) + '%';
+        }
+    } catch (e) {
+        console.error('Stats load error:', e);
+    }
+}
+
+/* ── Open progress modal + load full data ── */
+async function openProgressModal() {
+    document.getElementById('progressModal').classList.add('active');
+    document.getElementById('progressContent').innerHTML = `
+        <div class="prog-loading">
+            <div class="spin"></div><br>Loading your progress…
+        </div>`;
+    try {
+        const res  = await fetch('/get_student_info');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        renderProgress(data.student);
+    } catch (e) {
+        document.getElementById('progressContent').innerHTML =
+            `<div class="prog-loading" style="color:#e74c3c;">Failed to load progress. Please try again.</div>`;
+    }
+}
+
+function closeProgressModal() {
+    document.getElementById('progressModal').classList.remove('active');
+}
+
+function renderProgress(s) {
+    const xp    = s.xp || 0;
+    const level = Math.floor(xp / 100) + 1;
+    const xpToNext = (level * 100) - xp;
+
+    const modes = [
+        { label: 'Conversation', icon: '💬', val: s.conversationXp || 0 },
+        { label: 'Roleplay',     icon: '🎭', val: s.roleplayXp     || 0 },
+        { label: 'Repeat',       icon: '🔁', val: s.repeatXp       || 0 },
+        { label: 'Spell Bee',    icon: '🐝', val: s.spellbeeXp     || 0 },
+        { label: 'Meanings',     icon: '📖', val: s.meaningsXp     || 0 },
+    ];
+    const maxModeXP = Math.max(...modes.map(m => m.val), 1);
+
+    const allFeatures = ['conversation','roleplay','repeat','spellbee','meanings'];
+    const featureLabels = {
+        conversation: '💬 Conversation',
+        roleplay:     '🎭 Roleplay',
+        repeat:       '🔁 Repeat',
+        spellbee:     '🐝 Spell Bee',
+        meanings:     '📖 Meanings',
+    };
+    const unlocked = s.unlockedFeatures || ['conversation'];
+
+    const barsHTML = modes.map(m => `
+        <div class="xp-bar-row">
+            <div class="xp-bar-top">
+                <span class="xp-bar-label">${m.icon} ${m.label}</span>
+                <span class="xp-bar-val">${m.val} XP</span>
             </div>
-            <div class="modal-warning">
-                ❌ All your progress and XP<br>
-                ❌ All your activity history<br>
-                ❌ All your earned stars<br>
-                ❌ Your login credentials<br><br>
-                <strong>This action CANNOT be undone!</strong>
+            <div class="xp-bar-track">
+                <div class="xp-bar-fill" style="width:${Math.round((m.val / Math.max(xp, 1)) * 100)}%"></div>
             </div>
-            <div class="modal-text">
-                Are you absolutely sure?
+        </div>`).join('');
+
+    const pillsHTML = allFeatures.map(f => {
+        const isUnlocked = unlocked.includes(f);
+        return `<span class="feat-pill ${isUnlocked ? 'feat-unlocked' : 'feat-locked'}">
+            ${isUnlocked ? '✅' : '🔒'} ${featureLabels[f]}
+        </span>`;
+    }).join('');
+
+    document.getElementById('progressContent').innerHTML = `
+        <!-- Summary stats -->
+        <div class="prog-stats">
+            <div class="prog-stat">
+                <div class="ps-icon">⚡</div>
+                <div class="ps-val">${xp}</div>
+                <div class="ps-lbl">Total XP</div>
             </div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-cancel" onclick="hideSignOutModal()">
-                    No, Keep My Account
-                </button>
-                <button class="modal-btn modal-btn-danger" id="confirmDeleteBtn" onclick="confirmSignOut()">
-                    Yes, Delete Permanently
-                </button>
+            <div class="prog-stat">
+                <div class="ps-icon">🏆</div>
+                <div class="ps-val">Level ${level}</div>
+                <div class="ps-lbl">Current Level</div>
+            </div>
+            <div class="prog-stat">
+                <div class="ps-icon">⭐</div>
+                <div class="ps-val">${s.totalStars || 0}</div>
+                <div class="ps-lbl">Stars Earned</div>
+            </div>
+            <div class="prog-stat">
+                <div class="ps-icon">🎯</div>
+                <div class="ps-val">${s.averageAccuracy || 0}%</div>
+                <div class="ps-lbl">Accuracy</div>
+            </div>
+            <div class="prog-stat">
+                <div class="ps-icon">🔥</div>
+                <div class="ps-val">${s.streak || 0}</div>
+                <div class="ps-lbl">Day Streak</div>
+            </div>
+            <div class="prog-stat">
+                <div class="ps-icon">🎖️</div>
+                <div class="ps-val">${s.earnedBadgeCount || 0}/${s.totalBadgeCount || 0}</div>
+                <div class="ps-lbl">Badges</div>
             </div>
         </div>
-    </div>
 
-    <script>
-        {% raw %}
-        // Capitalize first letter of each word in name
-        function capitalizeName(name) {
-            if (!name) return '';
-            return name
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-        }
+        <!-- XP next level bar -->
+        <div class="xp-section" style="margin-bottom:18px;">
+            <div class="xp-bar-top" style="margin-bottom:6px;">
+                <span class="xp-bar-label">⚡ Level ${level} Progress</span>
+                <span class="xp-bar-val">${xpToNext} XP to Level ${level + 1}</span>
+            </div>
+            <div class="xp-bar-track" style="height:14px;">
+                <div class="xp-bar-fill" style="width:${Math.round((xp % 100))}%;background:linear-gradient(90deg,#00b894,#00cec9);"></div>
+            </div>
+        </div>
 
-        // Capitalize the student name on page load
-        window.addEventListener('DOMContentLoaded', function() {
-            const nameElement = document.getElementById('studentName');
-            if (nameElement) {
-                const originalName = nameElement.textContent.trim();
-                // Only capitalize if it's not a template variable
-                if (originalName && !originalName.includes('{{')) {
-                    nameElement.textContent = capitalizeName(originalName);
-                }
-            }
+        <!-- Per-mode XP breakdown -->
+        <div class="xp-section">
+            <h3>XP by Mode</h3>
+            ${barsHTML}
+        </div>
+
+        <!-- Unlocked features -->
+        <div class="unlock-section">
+            <h3>Unlocked Features</h3>
+            <div class="feature-pills">${pillsHTML}</div>
+        </div>
+    `;
+}
+
+/* ── Quotes ── */
+const quotes = [
+    { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+    { text: "Education is the most powerful weapon you can use to change the world.", author: "Nelson Mandela" },
+    { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+    { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
+    { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+    { text: "Every day is a chance to learn something new!", author: "Unknown" },
+    { text: "You are doing amazing! Keep going!", author: "Your Teacher" }
+];
+function setRandomQuote() {
+    const q = quotes[Math.floor(Math.random() * quotes.length)];
+    document.getElementById('quoteText').textContent   = `"${q.text}"`;
+    document.getElementById('quoteAuthor').textContent = `— ${q.author}`;
+}
+
+/* ── Logout ── */
+function logout() {
+    window.location.href = '/logout';
+}
+
+/* ── Delete modal ── */
+function showDeleteModal()  { document.getElementById('deleteModal').classList.add('active'); }
+function hideDeleteModal()  { document.getElementById('deleteModal').classList.remove('active'); }
+
+async function confirmDelete() {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Deleting…';
+    try {
+        const res  = await fetch('/delete_account', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }
         });
-
-        // Motivational quotes
-        const quotes = [
-            { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
-            { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
-            { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
-            { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
-            { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
-            { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
-            { text: "Every day is a chance to learn something new!", author: "Unknown" },
-            { text: "You are doing amazing! Keep going!", author: "Your Teacher" }
-        ];
-
-        // Random quote on load
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        document.getElementById('quoteText').textContent = `"${randomQuote.text}"`;
-        document.querySelector('.quote-author').textContent = `- ${randomQuote.author}`;
-
-        // Logout function (just logs out, doesn't delete data)
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                window.location.href = '/logout';
-            }
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/login';
+        } else {
+            alert('Error: ' + data.message);
+            btn.disabled    = false;
+            btn.textContent = 'Yes, Delete Forever';
         }
+    } catch (e) {
+        alert('An error occurred. Please try again.');
+        btn.disabled    = false;
+        btn.textContent = 'Yes, Delete Forever';
+    }
+}
 
-        // Sign Out Modal functions (permanent deletion)
-        function showSignOutModal() {
-            document.getElementById('signOutModal').classList.add('active');
-        }
-
-        function hideSignOutModal() {
-            document.getElementById('signOutModal').classList.remove('active');
-        }
-
-        async function confirmSignOut() {
-            const btn = document.getElementById('confirmDeleteBtn');
-            btn.disabled = true;
-            btn.textContent = 'Deleting...';
-
-            try {
-                const response = await fetch('/delete_account', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(data.message);
-                    window.location.href = '/login';
-                } else {
-                    alert('Error: ' + data.message);
-                    btn.disabled = false;
-                    btn.textContent = 'Yes, Delete Permanently';
-                }
-            } catch (error) {
-                alert('An error occurred. Please try again.');
-                btn.disabled = false;
-                btn.textContent = 'Yes, Delete Permanently';
-            }
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('signOutModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideSignOutModal();
-            }
-        });
-
-        // Keyboard support - ESC to close modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                hideSignOutModal();
-            }
-        });
-        {% endraw %}
-    </script>
+/* Close modals on outside click / ESC */
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) hideDeleteModal();
+});
+document.getElementById('progressModal').addEventListener('click', function(e) {
+    if (e.target === this) closeProgressModal();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { hideDeleteModal(); closeProgressModal(); }
+});
+{% endraw %}
+</script>
 </body>
 </html>
