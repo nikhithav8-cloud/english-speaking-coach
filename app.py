@@ -3388,6 +3388,6 @@ def teacher_reset_student_password():
     conn.close()
     return jsonify({"success": True, "message": f"Password for {user['name']} (Class {user['class_name']}-{user['division']}) reset successfully"})
 
-# ================= RUN =================
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))  # Render provides PORT
+    app.run(host="0.0.0.0", port=port)
